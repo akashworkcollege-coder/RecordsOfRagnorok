@@ -1,0 +1,62 @@
+{
+    "valkyries_status": {
+        "Hrist": "available",
+        "Thrud": "available",
+        "Randgriz": "available",
+        "Geirölul": "available",
+        "Skalmöld": "available",
+        "Reginleif": "available",
+        "Ráðgríðr": "available",
+        "Göndul": "available",
+        "Alvitr": "available",
+        "Hlökk": "available",
+        "Skeggjöld": "available",
+        "Brunhilde": "organizer",
+        "Göll": "assistant"
+    },
+    "story_progress": {
+        "round1_complete": false,
+        "round2_complete": false,
+        "round3_complete": false,
+        "round4_complete": false,
+        "round5_complete": false,
+        "round6_complete": false,
+        "round7_complete": false,
+        "round8_complete": false,
+        "round9_complete": false,
+        "round10_complete": false,
+        "round11_complete": false,
+        "round12_complete": false
+    },
+    "victories": 0,
+    "total_kills": 0,
+    "humanity_score": 0,
+    "gods_score": 0,
+    "round_number": 1,
+    "adam_copy_data": {
+        "name": "Adam",
+        "hp": 1300,
+        "energy": 440,
+        "active_realm": null,
+        "valkyrie": null,
+        "valkyrie_index": -1,
+        "volund_active": false,
+        "volund_weapon": "",
+        "copy_count": 0,
+        "blindness": 0,
+        "copied_techniques": [],
+        "technique_view_count": {},
+        "death_activated": false
+    },
+    "jack_weapon_data": {
+        "1": 50,
+        "3": 50,
+        "4": 10,
+        "5": 2,
+        "6": 1,
+        "7": 1,
+        "8": 2,
+        "9": 1,
+        "13": 1
+    }
+}
