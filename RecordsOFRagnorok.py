@@ -640,6 +640,40 @@ class Character:
         return 0
 
     def update_status_effects(self):
+        # ── DoT / HoT processing ─────────────────────────────────────────
+        # POISON: value = damage per tick (default 30)
+        if self.has_status_effect(StatusEffect.POISON):
+            dmg = int(self.get_status_effect_value(StatusEffect.POISON))
+            if dmg <= 0:
+                dmg = 30
+            self.take_damage(dmg, ignore_defense=True)
+            print(f"  💀 [POISON] {self.name} takes {dmg} poison damage!")
+
+        # BURN: value = damage per tick (default 40)
+        if self.has_status_effect(StatusEffect.BURN):
+            dmg = int(self.get_status_effect_value(StatusEffect.BURN))
+            if dmg <= 0:
+                dmg = 40
+            self.take_damage(dmg, ignore_defense=True)
+            print(f"  🔥 [BURN] {self.name} takes {dmg} burn damage!")
+
+        # BLEED: value = damage per tick (default 25)
+        if self.has_status_effect(StatusEffect.BLEED):
+            dmg = int(self.get_status_effect_value(StatusEffect.BLEED))
+            if dmg <= 0:
+                dmg = 25
+            self.take_damage(dmg, ignore_defense=True)
+            print(f"  🩸 [BLEED] {self.name} takes {dmg} bleed damage!")
+
+        # REGEN: value = HP restored per tick (default 50)
+        if self.has_status_effect(StatusEffect.REGEN):
+            heal = int(self.get_status_effect_value(StatusEffect.REGEN))
+            if heal <= 0:
+                heal = 50
+            self.hp = min(self.max_hp, self.hp + heal)
+            print(f"  💚 [REGEN] {self.name} recovers {heal} HP!")
+
+        # ── Duration tick & expiry ────────────────────────────────────────
         expired = []
         for effect in self.status_effects:
             effect.duration -= 1
