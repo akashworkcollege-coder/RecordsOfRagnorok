@@ -7028,7 +7028,7 @@ class RagnarokGame:
 
             if damage_abilities:
                 print("  💢 DAMAGE:")
-                for key in sorted(damage_abilities.keys(), key=lambda x: int(x) if x.isdigit() else x):
+                for key in sorted(damage_abilities.keys(), key=lambda x: (int(m.group(1)), m.group(2)) if (m := __import__('re').match(r'^(\d+)(.*)', str(x))) else (999, x)):
                     abil = damage_abilities[key]
                     dmg = abil["dmg"]
                     dmg_str = f"{dmg[0]}-{dmg[1]} DMG" if dmg != (0, 0) else ""
@@ -7044,7 +7044,7 @@ class RagnarokGame:
 
             if utility_abilities:
                 print("\n  🛡️ UTILITY/OTHER:")
-                for key in sorted(utility_abilities.keys(), key=lambda x: int(x) if x.isdigit() else x):
+                for key in sorted(utility_abilities.keys(), key=lambda x: (int(m.group(1)), m.group(2)) if (m := __import__('re').match(r'^(\d+)(.*)', str(x))) else (999, x)):
                     abil = utility_abilities[key]
                     dmg = abil["dmg"]
                     dmg_str = f"{dmg[0]}-{dmg[1]} DMG" if dmg != (0, 0) else ""
@@ -7124,7 +7124,7 @@ class RagnarokGame:
                 return False
             elif choice == '0':
                 print("\n📖 SELECT ABILITY TO DESCRIBE:")
-                for key in sorted(available.keys(), key=lambda x: int(x) if x.isdigit() else x):
+                for key in sorted(available.keys(), key=lambda x: (int(m.group(1)), m.group(2)) if (m := __import__('re').match(r'^(\d+)(.*)', str(x))) else (999, x)):
                     abil = available[key]
                     print(f"  {key}. {abil['name']}")
                 print("\n  b. Back")
