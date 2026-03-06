@@ -262,6 +262,7 @@ class StatusEffect(Enum):
     ORGAN_SHIFT = ("🫀", "ORGAN SHIFT", "light_red")
     MUSCLE_RELEASE = ("💪", "100%", "light_red")
     NIRVANA_SWORD = ("🗡️", "NIRVANA", "light_white")
+    SALAKAYAS = ("🌾", "SALAKAYAS", "dark_purple")
     BLINDFOLD_OFF = ("👁️", "STAR EYES", "light_cyan")
     CHI_FLOW = ("✨", "CHI FLOW", "light_cyan")
     CHI_CRUX = ("⭐", "CRUX", "light_yellow")
@@ -1428,15 +1429,15 @@ class Poseidon(Character):
             '2': {"name": "🌊 Divine Speed", "cost": 30, "dmg": (190, 250), "type": "damage", "divine": True,
                   "desc": "🌊 [DIVINE SPEED] Poseidon attacks with the speed of a raging sea. The trident becomes a blur, striking faster than the eye can follow, like waves crashing against the shore. [TRANSFORMATION: The trident becomes a blur, striking faster than the eye can follow]"},
             '3': {"name": "🌊 Amphitrite", "cost": 40, "dmg": (220, 290), "type": "damage", "divine": True,
-                  "blockable": False,
-                  "desc": "🌊 [AMPHITRITE] Named after Poseidon's queen, this thrust flows like water around defenses. The trident becomes fluid, finding gaps where none should exist, like water seeping through cracks. [TRANSFORMATION: The trident becomes fluid, finding gaps where none should exist]"},
+                  "blockable": True,
+                  "desc": "🌊 [AMPHITRITE] Named after Poseidon's queen and goddess of the seas. Poseidon unleashes incessant trident thrusts in a relentless circular pattern at blinding speed. [TRANSFORMATION: The trident blurs into a circular maelstrom of relentless thrusts]"},
             '4': {"name": "🌊 Chione Tyro Demeter", "cost": 55, "dmg": (270, 340), "type": "damage", "divine": True,
                   "blockable": True,
-                  "desc": "🌊 [CHIONE TYRO DEMETER] A threefold thrust combining the powers of snow, fertility, and the harvest. Three divine aspects merge into one devastating strike, as unstoppable as winter, spring, and autumn combined. [TRANSFORMATION: Three divine aspects merge into one devastating strike]"},
+                  "desc": "🌊 [CHIONE TYRO DEMETER] Poseidon leaps into the air above his opponent and unleashes an endless barrage of trident thrusts from above, akin to lightning in a thunderstorm. So fast they create countless afterimages. [TRANSFORMATION: Poseidon descends like a storm, trident thrusts raining down like divine lightning]"},
             '5': {"name": "🌊 Medusa Alope Demeter", "cost": 75, "dmg": (350, 430), "type": "damage", "divine": True,
-                  "blockable": True,
+                  "blockable": False,
                   "effect": "petrify",
-                  "desc": "🌊 [MEDUSA ALOPE DEMETER] A devastating combination that turns opponents to stone and drowns them. The trident strikes with the petrifying power of Medusa and the drowning force of the sea. [TRANSFORMATION: The trident strikes with the petrifying power of Medusa and the drowning force of the sea]"},
+                  "desc": "🌊 [MEDUSA ALOPE DEMETER] Poseidon unleashes trident strikes combining divine might and godly speed, attacking from every possible direction. The speed is such that it creates a dome of afterimages completely surrounding his opponent — a cage of inescapable spear thrusts. [TRANSFORMATION: A dome of afterimages forms around the opponent — every direction blocked by Poseidon's strikes]"},
             '6': {"name": "🌊 Hydrokinesis", "cost": 35, "dmg": (0, 0), "type": "utility", "effect": "hydrokinesis",
                   "desc": "🌊 [HYDROKINESIS] Poseidon manipulates water to create defensive barriers. Water rises from the ground, forming a protective wall that can block attacks. [TRANSFORMATION: Water rises from the ground, forming a protective wall]"},
             '7': {"name": "✨ Materialize Trident", "cost": 15, "dmg": (0, 0), "type": "buff", "effect": "materialize",
@@ -1509,7 +1510,7 @@ class Heracles(Character):
             1350, 430,
             [Realm.GODLY_STRENGTH, Realm.GODLY_ENDURANCE]
         )
-        self.volund_weapon = "Nemean Lion Pelt Armour (ネメアの獅子の毛皮)"
+        self.volund_weapon = "Lion Club (獅子の棍棒) — A magical silver club that transforms into different animals including a lion, eagle, and bull when Heracles uses his Twelve Labors. Each transformation spreads his tattoo, bringing him closer to death."
         self.round = 4
         self.affiliation = "Gods"
         self.labors_used = 0
@@ -1526,7 +1527,7 @@ class Heracles(Character):
 
         self.abilities = {
             '1': {"name": "🦁 1st Labor: Nemean Lion", "cost": 30, "dmg": (170, 230), "type": "damage", "labor": 1,
-                  "desc": "🦁 [NEMEAN LION] Heracles uses the pelt of the Nemean Lion. The lion's invulnerable hide manifests around Heracles' strike, making it as unstoppable as the legendary beast. [TRANSFORMATION: The lion's invulnerable hide manifests around Heracles' strike]"},
+                  "desc": "🦁 [NEMEAN LION: HEAVEN-DEVOURING ROAR] The head of Heracles' club transforms into a roaring lion. He smashes it into the ground with tremendous force, creating an enormous shockwave powerful enough to destroy reinforced weapons and send opponents flying. [TRANSFORMATION: The club's head roars to life as a lion — smashed into the ground, the shockwave tears through the arena]"},
             '2': {"name": "🐍 2nd Labor: Lernaean Hydra", "cost": 35, "dmg": (190, 250), "type": "damage", "labor": 2,
                   "desc": "🐍 [LERNAEAN HYDRA] Heracles channels the Hydra's regenerative power. Each strike seems to multiply, like the heads of the Hydra, growing more numerous with each attack. [TRANSFORMATION: Each strike seems to multiply, like the heads of the Hydra]"},
             '3': {"name": "🦌 3rd Labor: Ceryneian Hind", "cost": 30, "dmg": (180, 240), "type": "damage", "labor": 3,
@@ -1739,31 +1740,31 @@ class Zerofuku(Character):
             1150, 410,
             [Realm.GODLY_STRENGTH]
         )
-        self.volund_weapon = "Misery Cleaver (不幸の大鎌)"
+        self.volund_weapon = "Axe of Misery (斧爻ふこう, Fukō) — Created from Zerofuku's own flesh, blood and bones via biokinesis. Absorbs misery to grow bigger and more destructive. After enough misery absorbed, transforms into a six-headed axe nearly a hundred times his own size."
         self.round = 6
         self.affiliation = "Gods"
         self.misery_level = 0
         self.cleaver_heads = 1
 
         self.divine_technique = {
-            "name": "🎋 MISERY CLEAVER - STORM FORM",
+            "name": "🎋 AXE OF MISERY - STORM FORM",
             "cost": 170,
             "dmg": (500, 650),
             "type": "damage",
-            "desc": "🎋 [MISERY STORM] Zerofuku transforms his Misery Cleaver into a storm of countless black blades. The accumulated misfortune of all humanity manifests as an inescapable rain of destruction. [TRANSFORMATION: The accumulated misfortune of all humanity manifests as an inescapable rain of destruction]"
+            "desc": "🎋 [MISERY STORM] Zerofuku transforms his Axe of Misery into a storm of countless black blades. The accumulated misfortune of all humanity manifests as an inescapable rain of destruction. [TRANSFORMATION: The accumulated misfortune of all humanity manifests as an inescapable rain of destruction]"
         }
 
         self.abilities = {
-            '1': {"name": "🎋 Misery Cleaver", "cost": 25, "dmg": (150, 210), "type": "damage",
-                  "desc": "🎋 [MISERY CLEAVER] Zerofuku's divine weapon, formed from accumulated misfortune. Misfortune crystallizes into a physical blade that grows with each swing. [TRANSFORMATION: Misfortune crystallizes into a physical blade]"},
+            '1': {"name": "🪓 Axe of Misery", "cost": 25, "dmg": (150, 210), "type": "damage",
+                  "desc": "🪓 [AXE OF MISERY] Zerofuku's divine battle axe created from his own flesh, blood and bones via biokinesis. As it absorbs his misery it grows bigger and more destructive — even a single strike can send a straight shockwave outside the ring. [TRANSFORMATION: The axe pulses with absorbed misery, flesh-like protrusions writhing as it grows]"},
             '2': {"name": "😢 Absorb Misfortune", "cost": 30, "dmg": (0, 0), "type": "buff", "effect": "absorb",
                   "desc": "😢 [ABSORB MISFORTUNE] Zerofuku absorbs misfortune, increasing the power of his cleaver. Negative energy flows into the blade, making it grow more monstrous with each absorption. [TRANSFORMATION: Negative energy flows into the blade, making it grow]"},
             '3': {"name": "🎋 Six-Headed Form", "cost": 60, "dmg": (300, 380), "type": "damage",
-                  "desc": "🎋 [SIX-HEADED FORM] The Misery Cleaver splits into six separate blades. Each head seeks out different parts of the opponent's body, attacking from multiple angles. [TRANSFORMATION: Each head seeks out different parts of the opponent's body]"},
+                  "desc": "🎋 [SIX-HEADED FORM] The Axe of Misery splits into six separate blades. Each head seeks out different parts of the opponent's body, attacking from multiple angles. [TRANSFORMATION: Each head seeks out different parts of the opponent's body]"},
             '4': {"name": "⚔️ Sword Transformation", "cost": 50, "dmg": (240, 330), "type": "damage",
                   "desc": "⚔️ [SWORD TRANSFORMATION] Zerofuku reshapes his cleaver into different weapon forms. The blade adapts to the flow of battle, becoming whatever weapon is needed. [TRANSFORMATION: The blade adapts to the flow of battle]"},
             '5': {"name": "🌪️ Storm Form", "cost": 100, "dmg": (400, 500), "type": "damage",
-                  "desc": "🌪️ [STORM FORM] The Misery Cleaver transforms into a whirlwind of blades. Attacks from all directions at once, an inescapable storm of misfortune. [TRANSFORMATION: Attacks from all directions at once]"},
+                  "desc": "🌪️ [STORM FORM] The Axe of Misery transforms into a whirlwind of blades. Attacks from all directions at once, an inescapable storm of misfortune. [TRANSFORMATION: Attacks from all directions at once]"},
             '6': {"name": "🎋 Seven Lucky Gods Union", "cost": 120, "dmg": (470, 590), "type": "damage",
                   "desc": "🎋 [SEVEN LUCKY GODS UNION] Zerofuku channels the power of all Seven Lucky Gods. Each deity adds their unique blessing to his attack, creating a strike of both fortune and misfortune. [TRANSFORMATION: Each deity adds their unique blessing to his attack]"}
         }
@@ -1798,11 +1799,11 @@ class Zerofuku(Character):
     def ensure_divine_technique(self):
         if not self.divine_technique:
             self.divine_technique = {
-                "name": "🎋 MISERY CLEAVER - STORM FORM",
+                "name": "🎋 AXE OF MISERY - STORM FORM",
                 "cost": 170,
                 "dmg": (500, 650),
                 "type": "damage",
-                "desc": "🎋 [MISERY STORM] Zerofuku transforms his Misery Cleaver into a storm of countless black blades. The accumulated misfortune of all humanity manifests as an inescapable rain of destruction. [TRANSFORMATION: The accumulated misfortune of all humanity manifests as an inescapable rain of destruction]"
+                "desc": "🎋 [MISERY STORM] Zerofuku transforms his Axe of Misery into a storm of countless black blades. The accumulated misfortune of all humanity manifests as an inescapable rain of destruction. [TRANSFORMATION: The accumulated misfortune of all humanity manifests as an inescapable rain of destruction]"
             }
         return self.divine_technique
 
@@ -1913,7 +1914,7 @@ class Hades(Character):
             '3': {"name": "💀 Persephone-Lore", "cost": 55, "dmg": (290, 370), "type": "damage",
                   "desc": "💀 [PERSEPHONE-LORE] 'Destroyer of Storms' — Hades charges straight at his opponent and drives his bident forward in a powerful straight thrust. As he does, a concentrated spiral of wind forms around the tip, designed to utterly annihilate whatever it pierces. [TRANSFORMATION: A cyclone of wind concentrates around the bident as Hades charges forward]"},
             '4': {"name": "💀 Persephone-Titan", "cost": 60, "dmg": (330, 410), "type": "damage",
-                  "desc": "💀 [PERSEPHONE-TITAN] 'The Earth Crusher' - Hades channels the power of the Titans through his bident. An earth-shattering thrust. [TRANSFORMATION: An earth-shattering thrust]"},
+                  "desc": "💀 [PERSEPHONE-TITAN] 'The Earth Crusher' — Hades grips his bident by the polearm near the spearhead and raises it high above his head. From this unusual overhead stance, he delivers a mighty downward swing, sliding his grip all the way down to the end of the polearm for maximum force. The blow was powerful enough to overwhelm Qin Shi Huang's guard and crush him into the ground. [TRANSFORMATION: The bident descends like a falling mountain — grip sliding down the shaft to unleash full devastating force]"},
             '5': {"name": "🦵 Cornucopia", "cost": 40, "dmg": (230, 310), "type": "damage",
                   "desc": "🦵 [CORNUCOPIA] 'Horn of Plenty' — Hades first swings his bident downward at his opponent while planting his feet. As his opponent blocks the bident, Hades straightens his left leg, raises his right knee, and leans back — delivering a devastating knee strike to the face. [TRANSFORMATION: The bident swing is a feint — the knee rises to the face as the true blow]"},
             '6': {"name": "💧 Ichor Activation", "cost": 40, "dmg": (0, 0), "type": "buff", "effect": "ichor",
@@ -2100,7 +2101,7 @@ class Apollo(Character):
             1180, 440,
             [Realm.GODLY_SPEED, Realm.GODLY_TECHNIQUE]
         )
-        self.volund_weapon = "Silver Bow & Lyre (銀の弓と竪琴)"
+        self.volund_weapon = "Threads of Artemis (アルテミスの糸) — Golden gauntlets with a dark blue underside, three small studs on each knuckle, and small holes above each fingertip. Apollo produces light from his fingertips, transforming them into threads he can weave into any form: shields, a lyre, boxing bracers, a giant bow, or light arrows invisible at light speed."
         self.round = 9
         self.affiliation = "Gods"
         self.expectation_bonus = 0
@@ -2130,7 +2131,7 @@ class Apollo(Character):
                   "effect": "expectations",
                   "desc": "☀️ [EMBRACE OF ETERNAL MIDNIGHT SUN] 'The Sun Shall Never Set on Me' - Apollo basks in the expectations of his fans. Damage +5% each use. Light radiates from Apollo, growing brighter with each expectation. [TRANSFORMATION: Light radiates from Apollo, growing brighter with each expectation]"},
             '6': {"name": "🎯 Apollo Epicurious", "cost": 55, "dmg": (270, 340), "type": "damage",
-                  "desc": "🎯 [APOLLO EPICURIOUS] 'Golden Arrows of the Shining Meteor' - A luxurious attack that flows like fine wine. A volley of golden arrows, each one a work of art. [TRANSFORMATION: A volley of golden arrows, each one a work of art]"},
+                  "desc": "🎯 [APOLLO EPICURIOUS] 'Golden Arrows of the Shining Meteor' - Apollo launches a massive wave of light arrows to overwhelm his opponent. These arrows are known as the FASTEST ATTACK IN VALHALLA. The arrows move so fast they are nearly invisible — an inescapable storm of light that drowns the opponent. [TRANSFORMATION: A wave of light arrows engulfs the target — the fastest projectile assault in all of Valhalla]"},
             '7': {"name": "🌙 Moonlight of Artemis", "cost": 80, "dmg": (0, 0), "type": "buff", "effect": "moonlight",
                   "desc": "🌙 [MOONLIGHT OF ARTEMIS] Apollo channels the power of his sister Artemis. Next attack double damage. A giant statue of Artemis rises, moonlight bathing the battlefield. [TRANSFORMATION: A giant statue of Artemis rises, moonlight bathing the battlefield]"},
             '8': {"name": "🛡️ Thread Shield", "cost": 30, "dmg": (0, 0), "type": "defense", "effect": "shield",
@@ -2206,7 +2207,7 @@ class Susanoo(Character):
             1280, 450,
             [Realm.GODLY_SPEED, Realm.GODLY_STRENGTH]
         )
-        self.volund_weapon = "Ame-no-Murakumo-no-Tsurugi (天叢雲剣)"
+        self.volund_weapon = "Onikiri Ame-no-Murakumo (鬼斬天叢雲) — 'Demon-Slaying Heavenly Sword of Gathering Clouds'. The original Ame-no-Murakumo melted down and recrafted into a katana by Human swordsmiths (Yasutsuna Hoki, Munechika Sanjo, Kunitsuna Awataguchi) and blacksmith Gods (Kanayagoshin and Hephaestus). Susano'o believes no better blade exists to face Soji Okita, the Demon Child."
         self.round = 10
         self.affiliation = "Gods"
         self.musouken_used = 0
@@ -2337,7 +2338,7 @@ class Loki(Character):
             1220, 440,
             [Realm.GODLY_TECHNIQUE]
         )
-        self.volund_weapon = "Svartálfaheimr Ring (スヴァルトアルフヘイムの指輪)"
+        self.volund_weapon = "Andvaranaut (アンドヴァラナウト) — Ring of Proliferation. A silver ring decorated with flower symbols worn on Loki's right ring finger. Removes all limits from Heimskringla, allowing infinite clone creation. Without it, Loki is limited to 5 simultaneous clones."
         self.round = 11
         self.affiliation = "Gods"
         self.clones = []
@@ -3418,8 +3419,8 @@ class LuBu(Character):
         self.divine_technique = None
 
         self.abilities = {
-            '1': {"name": "🏹 Sky Piercer", "cost": 30, "dmg": (160, 220), "type": "damage",
-                  "desc": "🏹 [SKY PIERCER] Lü Bu thrusts his spear with enough force to pierce the heavens. Raw power alone creates a shockwave that reaches the sky. [TRANSFORMATION: Raw power alone creates a shockwave that reaches the sky]"},
+            '1': {"name": "🏹 Halberd Strike", "cost": 30, "dmg": (160, 220), "type": "damage",
+                  "desc": "🏹 [HALBERD STRIKE] A powerful thrust of Lü Bu's legendary halberd. Even a basic strike from the Flying General generates a shockwave that shakes the earth. [TRANSFORMATION: Raw power alone — the sheer force of China's mightiest warrior behind a single thrust]"},
             '2': {"name": "🐎 Red Hare Charge", "cost": 35, "dmg": (190, 260), "type": "damage",
                   "desc": "🐎 [RED HARE CHARGE] Lü Bu charges forward on his legendary steed Red Hare. Man and horse become one, moving as a single unstoppable force. [TRANSFORMATION: Man and horse become one, moving as a single unstoppable force]"},
             '3': {"name": "🏹 Basic Strike", "cost": 15, "dmg": (120, 170), "type": "damage",
@@ -3427,7 +3428,8 @@ class LuBu(Character):
             '4': {"name": "🏹 Incomplete Sky Eater", "cost": 50, "dmg": (270, 340), "type": "damage",
                   "desc": "🏹 [INCOMPLETE SKY EATER] A preliminary version of Sky Eater. The first hints of heaven-rending power. [TRANSFORMATION: The first hints of heaven-rending power]"},
             '5': {"name": "🏹 Sky Eater", "cost": 100, "dmg": (430, 550), "type": "damage",
-                  "desc": "🏹 [SKY EATER] The technique that defines Lü Bu. The sky itself trembles before this strike. [TRANSFORMATION: The sky itself trembles before this strike]"},
+                  "blockable": False,
+                  "desc": "🏹 [SKY EATER] The technique that defines Lü Bu. The Fang Tian Ji breaks any defense — even Járngreipr cannot withstand it. The sky itself trembles before this strike. [TRANSFORMATION: The sky itself trembles before this strike — Fang Tian Ji shatters all defenses]"},
             '6': {"name": "🦯 Broken Legs Fighting", "cost": 40, "dmg": (220, 290), "type": "damage",
                   "effect": "break_legs",
                   "desc": "🦯 [BROKEN LEGS FIGHTING] Even with broken legs, Lü Bu continues to fight. Pain becomes power - even crippled, he stands. [TRANSFORMATION: Pain becomes power - even crippled, he stands]"},
@@ -3452,7 +3454,8 @@ class LuBu(Character):
             "cost": 180,
             "dmg": (550, 700),
             "type": "damage",
-            "desc": "🏹 [SKY EATER] Lü Bu's ultimate technique with Randgriz. He channels all his strength into a single strike that splits the sky itself. The halberd becomes an extension of Lü Bu's very soul, capable of tearing the heavens asunder. [TRANSFORMATION: The halberd becomes an extension of Lü Bu's very soul, capable of tearing the heavens asunder]"
+            "blockable": False,
+            "desc": "🏹 [SKY EATER] Lü Bu's ultimate technique with Randgriz — Fang Tian Ji's power breaks any defense. He channels all his strength into a single strike that splits the sky itself. The halberd becomes an extension of Lü Bu's very soul, capable of tearing the heavens asunder. [TRANSFORMATION: The halberd becomes an extension of Lü Bu's very soul, capable of tearing the heavens asunder. Fang Tian Ji shatters every defense — even Járngreipr could not withstand it.]"
         }
 
         print(f"\n⚔️ VÖLUNDR: Lü Bu x Randgriz")
@@ -3537,7 +3540,7 @@ class KojiroSasaki(Character):
             "cost": 180,
             "dmg": (550, 700),
             "type": "damage",
-            "desc": "⚔️ [SŌENZANKO BANJINRYŌRAN] 'Ten Thousand Tiger-Slaying Blade of the Twin Swallows' - Kojiro's ultimate technique combining Tsubame Gaeshi and Torakiri with both swords. Two swords become one technique, each strike flowing into the next. [TRANSFORMATION: Two swords become one technique, each strike flowing into the next]"
+            "desc": "⚔️ [SŌENZANKO BANJINRYŌRAN] 'Ten Thousand Tiger-Slaying Blade of the Twin Swallows' — Kojiro's three-phase ultimate technique with dual blades. Phase 1: Left sword in reverse grip delivers a swift Tsubame Gaeshi-style strike. Phase 2: Right sword immediately follows with a sideways Torakiri-style slash. Phase 3: Both swords simultaneously unleash a cross-slash in an X-pattern with such devastating force it split Poseidon's torso clean through. [TRANSFORMATION: Two swords become three movements — the twin swallows cross and tear reality itself in an X of annihilation]"
         }
 
         self.abilities = {
@@ -3618,7 +3621,7 @@ class KojiroSasaki(Character):
                 "cost": 180,
                 "dmg": (550, 700),
                 "type": "damage",
-                "desc": "⚔️ [SŌENZANKO BANJINRYŌRAN] 'Ten Thousand Tiger-Slaying Blade of the Twin Swallows' - Kojiro's ultimate technique combining Tsubame Gaeshi and Torakiri with both swords. Two swords become one technique, each strike flowing into the next. [TRANSFORMATION: Two swords become one technique, each strike flowing into the next]"
+                "desc": "⚔️ [SŌENZANKO BANJINRYŌRAN] 'Ten Thousand Tiger-Slaying Blade of the Twin Swallows' — Kojiro's three-phase ultimate technique. Phase 1: Left sword reverse grip Tsubame strike. Phase 2: Right sword sideways Torakiri slash. Phase 3: BOTH swords simultaneously in an X-pattern — the cross-slash that split Poseidon's torso in two. [TRANSFORMATION: Twin swallows cross — the X-pattern tears through divine flesh itself]"
             }
         return self.divine_technique
 
@@ -3662,9 +3665,9 @@ class JackTheRipper(Character):
             '2': {"name": "👁️ Soul Eye", "cost": 0, "dmg": (0, 0), "type": "passive",
                   "weapon": "Soul Eye", "max_uses": float('inf'),
                   "desc": "👁️ [SOUL EYE] Jack can see the 'color' of people's souls. [PASSIVE ABILITY - NOT A WEAPON]"},
-            '3': {"name": "🗡️ Dear Jane", "cost": 25, "dmg": (130, 190), "type": "damage",
-                  "weapon": "Dear Jane", "max_uses": 50, "uses_left": 50,
-                  "desc": "🗡️ [DEAR JANE] A simple knife attack named after Jack's mother. [MAGIC GLOVES: Turns ordinary knife into DIVINE WEAPON, named for the mother he loved and killed]"},
+            '3': {"name": "🗡️ Throwing Knives", "cost": 25, "dmg": (130, 190), "type": "damage",
+                  "weapon": "Throwing Knives", "max_uses": 50, "uses_left": 50,
+                  "desc": "🗡️ [THROWING KNIVES] Jack's main weaponry — dozens of small throwing knives which, through his divine gloves, pierce through godly flesh. 50 uses. [MAGIC GLOVES: Turns ordinary throwing knives into DIVINE PIERCING WEAPONS]"},
             '4': {"name": "🎻 Piano Wire", "cost": 30, "dmg": (150, 210), "type": "damage",
                   "weapon": "Piano Wire", "max_uses": 10, "uses_left": 10,
                   "desc": "🎻 [PIANO WIRE] Jack uses piano wire to strangle his opponents. 10 uses. [MAGIC GLOVES: Turns ordinary piano wire into INVISIBLE DIVINE GARROTE]"},
@@ -3706,14 +3709,14 @@ class JackTheRipper(Character):
                    "desc": "🦾 [ARM EXTENSION] Jack's arms extend unnaturally. [MAGIC GLOVES: Enhances his own BODY, allowing limbs to stretch]"},
             '15': {"name": "🗡️ Guidance of the Nocturne", "cost": 55, "dmg": (260, 330), "type": "damage",
                    "weapon": "Guidance of the Nocturne", "max_uses": float('inf'),
-                   "desc": "🗡️ [GUIDANCE OF THE NOCTURNE] Jack strikes from the shadows. [MAGIC GLOVES: Turns SHADOWS into DIVINE SHADOW BLADES]"},
+                   "desc": "🗡️ [GUIDANCE OF THE NOCTURNE] Jack uses the arm extension technique learned fighting Alfred — elongating his arms to increase reach and momentum, he throws a cannonball with enough rotational force to drill through a torso, leaving a clean hole. [MAGIC GLOVES: Turns CANNONBALL into a DIVINE DRILLING PROJECTILE through arm-extension centrifugal force]"},
             '16': {"name": "🫀 Internal Organ Shift", "cost": 40, "dmg": (0, 0), "type": "buff",
                    "weapon": "Internal Organ Shift", "max_uses": float('inf'),
                    "effect": "organ_shift_manual",
                    "desc": "🫀 [INTERNAL ORGAN SHIFT] Jack manually shifts his internal organs to reduce damage for 3 turns. [MAGIC GLOVES: Enhances his own BODY, allowing organs to shift position]"},
-            '17': {"name": "🎭 The Final Blow", "cost": 45, "dmg": (240, 320), "type": "damage",
-                   "weapon": "The Final Blow", "max_uses": float('inf'),
-                   "desc": "🎭 [THE FINAL BLOW] Jack performs the arm extension he learned fighting Alfred, increasing reach and momentum to throw a cannonball with enough force to drill through a torso. [TRANSFORMATION: Extended arms create devastating centrifugal force]"}
+            '17': {"name": "🩸 Dear God", "cost": 120, "dmg": (500, 680), "type": "damage",
+                   "weapon": "Dear God", "max_uses": 1, "uses_left": 1,
+                   "desc": "🩸 [DEAR GOD] Jack's final technique — dedicated to Heracles. After feigning an attack, Jack drops his weapon and falls, pretending to faint to lower the opponent's guard. The moment they believe they've won, Jack drives BOTH hands into the opponent's torso. His gloves are completely soaked in his own blood — enough blood to transform them into a Divine Weapon capable of ignoring divine durability and directly striking the interior of their body. [TRANSFORMATION: Blood-soaked Magic Gloves become DIVINE BODY-PIERCING WEAPONS — named for Heracles]"}
         }
         self._base_abilities = dict(self.abilities)
 
@@ -3732,7 +3735,8 @@ class JackTheRipper(Character):
             "cost": 200,
             "dmg": (550, 700),
             "type": "damage",
-            "desc": "🗡️ [DEAR GOD] Jack's ultimate technique - he turns the entire city of London into his divine weapon. Every building, every street, every shadow becomes a divine tool for murder - all channeled through the Magic Gloves. [TRANSFORMATION: Every building, every street, every shadow becomes a divine tool for murder - all channeled through the Magic Gloves]"
+            "blockable": False,
+            "desc": "🗡️ [DEAR GOD] Jack's ultimate technique — named for Heracles. Jack performs a fake attack to make his opponent strike him. He drops his weapon and begins to fall, feigning unconsciousness so his opponent lowers their guard. At that moment, Jack surges back up and drives BOTH HANDS into the opponent's torso — his gloves, completely soaked in his own blood, have become divine weapons capable of piercing godly flesh and directly destroying the interior of the body. [TRANSFORMATION: Blood-soaked Magic Gloves pierce divine flesh from within — the city of London itself bears witness as Jack's finest artwork unfolds]"
         }
 
         print(f"\n⚔️ VÖLUNDR: Jack x Hlökk (FORCED)")
@@ -3755,12 +3759,12 @@ class JackTheRipper(Character):
                 uses_left = ability["uses_left"]
                 max_uses = ability["max_uses"]
 
-                if "Knife" in weapon_name and "Dear" not in weapon_name:
+                if "Knife" in weapon_name and "Dear" not in weapon_name and "Throwing" not in weapon_name:
                     print(
                         f"⚡ [MAGIC GLOVES] Jack touches the ordinary knife with his Magic Gloves - it transforms into a DIVINE THROWING BLADE!")
-                elif "Dear Jane" in weapon_name:
+                elif "Throwing Knives" in weapon_name:
                     print(
-                        f"⚡ [MAGIC GLOVES] The knife named after his mother glows with divine light - transformed by the Magic Gloves!")
+                        f"⚡ [MAGIC GLOVES] Jack hurls his throwing knives — the Magic Gloves transform each one into a DIVINE PIERCING BLADE!")
                 elif "Piano" in weapon_name:
                     print(
                         f"⚡ [MAGIC GLOVES] Jack's Magic Gloves glow as he touches the piano wire - it becomes an INVISIBLE DIVINE GARROTE!")
@@ -3867,10 +3871,12 @@ class JackTheRipper(Character):
                 percentage = int((uses / max_uses) * 100) if max_uses > 0 else 0
                 print(f"  {name:25} |{bar}| {uses:2}/{max_uses} ({percentage}%)")
 
-                if "Knife" in name and "Dear" not in name:
+                if "Knife" in name and "Dear" not in name and "Throwing" not in name:
                     print(f"      ↳ [MAGIC GLOVES] Ordinary knife → DIVINE THROWING BLADE")
-                elif "Dear Jane" in name:
-                    print(f"      ↳ [MAGIC GLOVES] Named knife → DIVINE MOTHER'S BLADE")
+                elif "Throwing Knives" in name:
+                    print(f"      ↳ [MAGIC GLOVES] Throwing Knives → DIVINE PIERCING BLADES")
+                elif "Dear God" in name:
+                    print(f"      ↳ [MAGIC GLOVES] Blood-soaked gloves → DIVINE BODY-PIERCING WEAPONS")
                 elif "Piano" in name:
                     print(f"      ↳ [MAGIC GLOVES] Piano wire → INVISIBLE DIVINE GARROTE")
                 elif "Umbrella" in name:
@@ -3895,7 +3901,7 @@ class JackTheRipper(Character):
                 "cost": 200,
                 "dmg": (550, 700),
                 "type": "damage",
-                "desc": "🗡️ [DEAR GOD] Jack's ultimate technique - he turns the entire city of London into his divine weapon. Every building, every street, every shadow becomes a divine tool for murder - all channeled through the Magic Gloves. [TRANSFORMATION: Every building, every street, every shadow becomes a divine tool for murder - all channeled through the Magic Gloves]"
+                "desc": "🗡️ [DEAR GOD] Jack's ultimate technique — named for Heracles. Jack performs a fake attack to make his opponent strike him. He drops his weapon and begins to fall, feigning unconsciousness so his opponent lowers their guard. At that moment, Jack surges back up and drives BOTH HANDS into the opponent's torso — his gloves, completely soaked in his own blood, have become divine weapons capable of piercing godly flesh and directly destroying the interior of the body. [TRANSFORMATION: Blood-soaked Magic Gloves pierce divine flesh from within — the city of London itself bears witness as Jack's finest artwork unfolds]"
             }
         return self.divine_technique
 
@@ -3938,7 +3944,7 @@ class RaidenTameemon(Character):
             "cost": 200,
             "dmg": (600, 800),
             "type": "damage",
-            "desc": "💪 [YATAGARASU] Raiden's ultimate palm strike that removed four of Shiva's arms. All of Raiden's muscle power concentrates into a single devastating palm strike. [TRANSFORMATION: All of Raiden's muscle power concentrates into a single devastating palm strike]"
+            "desc": "💪 [YATAGARASU] Raiden's ultimate palm strike that blew away TWO of Shiva's arms despite all four blocking. The shockwave removed all sound from Valhalla Arena. All of Raiden's muscle power concentrates into a single devastating palm strike. [TRANSFORMATION: All of Raiden's muscle power concentrates into a single devastating palm strike]"
         }
 
         self.abilities = {
@@ -3963,7 +3969,7 @@ class RaidenTameemon(Character):
                   "effect": "release",
                   "desc": "💪 [100% MUSCLE RELEASE] Raiden releases all 100 seals on his muscles, unleashing his true power! However, the strain deals 50 damage to himself. [TRANSFORMATION: The final seal breaks - Raiden's true power erupts, but his body pays the price]"},
             '9': {"name": "🐦‍⬛ Yatagarasu", "cost": 120, "dmg": (470, 630), "type": "damage",
-                  "desc": "🐦‍⬛ [YATAGARASU] 'Three-Legged Crow' - The ultimate palm strike. Raiden focuses power into his legs, channels it to his hand, and delivers a strike that removed four of Shiva's arms. The three-legged crow's power - a strike that silences the arena. [TRANSFORMATION: The three-legged crow's power - a strike that silences the arena]"}
+                  "desc": "🐦‍⬛ [YATAGARASU] 'Three-Legged Crow' — Teppo's strongest form. Raiden focuses power into his legs and channels it into his hand, delivering a palm strike that blew away TWO of Shiva's arms even while blocking with all four. The shockwave removed all sound from Valhalla Arena. [TRANSFORMATION: The three-legged crow's power — a strike that silences the arena]"}
         }
 
         print(f"\n⚔️ VÖLUNDR: Raiden x Thrud")
@@ -4005,7 +4011,7 @@ class RaidenTameemon(Character):
                 "cost": 200,
                 "dmg": (600, 800),
                 "type": "damage",
-                "desc": "💪 [YATAGARASU] Raiden's ultimate palm strike that removed four of Shiva's arms. All of Raiden's muscle power concentrates into a single devastating palm strike. [TRANSFORMATION: All of Raiden's muscle power concentrates into a single devastating palm strike]"
+                "desc": "💪 [YATAGARASU] Raiden's ultimate palm strike — blew away TWO of Shiva's arms, released a shockwave that silenced Valhalla Arena. All of Raiden's muscle power channeled from legs to hand in a single devastating palm strike. [TRANSFORMATION: The three-legged crow strikes — every muscle explodes into one unstoppable point]"
             }
         return self.divine_technique
 
@@ -4073,6 +4079,8 @@ class Buddha(Character):
                   "desc": "🧘 [ENLIGHTENED COUNTER] Buddha reads the attack before it lands and responds in kind. Uses his Future Sight to anticipate the strike, countering with a precise blow that carries no anger — only truth. [TRANSFORMATION: Serene awareness transforms incoming force into perfectly redirected energy]"},
             '6': {"name": "🌸 Mahaparinirvana", "cost": 120, "dmg": (380, 500), "type": "damage", "effect": "mahaparinirvana",
                   "desc": "🌸 [MAHAPARINIRVANA] The Great Complete Nirvana — Buddha channels the absolute stillness of enlightenment into a devastating strike. This is his peak technique before the Zerofuku fusion. The blow carries the weight of all existence. [TRANSFORMATION: Buddha channels the absolute stillness of enlightenment — the void between thoughts becomes a weapon]"},
+            '6b': {"name": "💀 Karma Nirodha Samsara: Eternity", "cost": 90, "dmg": (310, 420), "type": "damage", "effect": "karma_eternity",
+                   "desc": "💀 [KARMA NIRODHA SAMSARA: ETERNITY] Only attainable when Buddha is overcome by hatred — the Salakayas Warscythe manifests. The lion head emits tremendous physical energy, causing the scythe to swing toward the target at blinding speeds. Karma is destroyed, the cycle of suffering shattered. [TRANSFORMATION: The lion head roars — dead souls are channeled into the scythe before it is swung sideways, obliterating whatever it touches]"},
             '7': {"name": "🌀 Zerofuku Fusion", "cost": 80, "dmg": (0, 0), "type": "buff", "effect": "zerofuku_fusion",
                   "desc": "🌀 [ZEROFUKU FUSION] Buddha absorbs the accumulated misfortune and suffering of Zerofuku — the god of misery who was once the god of fortune. All that pain, all that sorrow, transforms into the ultimate divine weapon: the Great Nirvana Sword Zero. Can only be used once. [TRANSFORMATION: Zerofuku's very soul dissolves into light and reforms as a seven-branched divine blade in Buddha's hand]"},
         }
@@ -4146,6 +4154,16 @@ class Buddha(Character):
         elif effect == "mahaparinirvana":
             self.add_status_effect(StatusEffect.EMPOWER, 1, 1.4)
             return "🌸 [MAHAPARINIRVANA] The Great Complete Nirvana — absolute stillness becomes absolute force! [TRANSFORMATION: The void between thoughts becomes a weapon of ultimate enlightenment]"
+
+        elif effect == "karma_eternity":
+            # Wiki: Salakayas warscythe ONLY manifests when overcome with hatred
+            if self.current_emotion != "hatred":
+                return "❌ [KARMA NIRODHA SAMSARA] Salakayas only manifests when overcome with HATRED. Activate Six Realms until hatred state is reached."
+
+            self.add_status_effect(StatusEffect.EMPOWER, 1, 1.6)
+            if hasattr(StatusEffect, 'SALAKAYAS'):
+                self.add_status_effect(StatusEffect.SALAKAYAS, 1)
+            return "💀 [KARMA NIRODHA SAMSARA: ETERNITY] The lion head of Salakayas manifests! Dead souls channeled into the scythe — swung at blinding speeds toward the target! Karma itself is destroyed! [TRANSFORMATION: The lion head roars — the scythe of dark enlightenment obliterates the cycle of suffering]"
 
         elif effect == "zerofuku_fusion":
             if not self.zerofuku_fused:
@@ -4246,6 +4264,9 @@ class Buddha(Character):
                 "desc": "🌀 [ZEROFUKU FUSION] Absorb Zerofuku's accumulated misfortune and unlock the Great Nirvana Sword Zero. Can only be used once per battle."
             }
         self.abilities.pop('8', None)  # Remove post-fusion nirvana sword if present
+        # Restore '6b' (Karma Nirodha Samsara) if not in base snapshot
+        if '6b' not in self.abilities and '6b' in self._base_abilities:
+            self.abilities['6b'] = self._base_abilities['6b']
 
 
 # ============================================================================
@@ -4514,6 +4535,7 @@ class Leonidas(Character):
         self.round = 9
         self.affiliation = "Humanity"
         self.shield_form = "base"
+        self.aletheia_active = False
 
         self.abilities = {
             '1': {"name": "🛡️ Spartan Kick", "cost": 15, "dmg": (140, 190), "type": "damage",
@@ -4551,7 +4573,10 @@ class Leonidas(Character):
                   "effect": "hammer_form",
                   "desc": "🔨 [HAMMER FORM] Geirölul transforms into a massive hammer. The shield splits into six legs that form a massive hammer head - now a DIVINE HAMMER. [TRANSFORMATION: The shield splits into six legs that form a massive hammer head - now a DIVINE HAMMER]"},
             '5': {"name": "🛡️ Phalanx Lambda", "cost": 100, "dmg": (470, 610), "type": "damage",
-                  "desc": "🛡️ [PHALANX LAMBDA] Leonidas's ultimate technique. The Aletheia Sparta - the shield's true form revealed, charging forward with the weight of Spartan history. [TRANSFORMATION: The Aletheia Sparta - the shield's true form revealed, charging forward with the weight of Spartan history]"},
+                  "desc": "🛡️ [PHALANX LAMBDA] Leonidas's ultimate technique — preceded by Aletheia Sparta. The metallic covering of the shield shatters away, revealing the true aspis engraved with a lambda, emitting a dark aura. Leonidas then charges forward — simple, direct, unstoppable. This represents the essence of Sparta's Phalanx: an unceasing offensive charge that pierces straight ahead like a spear. Powerful enough to counter Apollo's Argyrotoxos. [TRANSFORMATION: Aletheia Sparta activates — the Shield of Truth emerges, then Leonidas charges with the spirit of all Sparta behind him]"},
+            '10': {"name": "🌑 Aletheia Sparta", "cost": 35, "dmg": (0, 0), "type": "buff",
+                   "effect": "aletheia",
+                   "desc": "🌑 [ALETHEIA SPARTA] 'Shield of Truth' — The metallic covering of Leonidas's Aspis Shield breaks apart completely, revealing the true lambda-engraved aspis beneath, emitting a dark aura around both Leonidas and the shield. This transformation increases offensive and defensive power. [TRANSFORMATION: The metallic shell shatters — the true Shield of Truth emerges, glowing with a dark Spartan aura]"},
             '6': {"name": "🛡️ Phalanx Asanatos", "cost": 30, "dmg": (170, 240), "type": "damage",
                   "desc": "🛡️ [PHALANX ASANATOS] Leonidas extends his shield by a chain and launches it in rapid succession, leaving afterimages. The shield becomes a meteor on a chain. [TRANSFORMATION: The shield becomes a meteor on a chain]"},
             '7': {"name": "🛡️ Phalanx Enochos", "cost": 45, "dmg": (240, 320), "type": "damage", "saw_only": True,
@@ -4590,6 +4615,11 @@ class Leonidas(Character):
             self.shield_form = "hammer"
             self.add_status_effect(StatusEffect.HAMMER_FORM, 5)
             return "🔨 [HAMMER FORM] Shield transforms into Hammer Form! [TRANSFORMATION: The shield splits and reforms into a massive divine hammer - capable of crushing gods]"
+        elif effect == "aletheia":
+            self.aletheia_active = True
+            self.add_status_effect(StatusEffect.SHIELD_FORM, 999)
+            self.add_status_effect(StatusEffect.EMPOWER, 999, 1.3)
+            return "🌑 [ALETHEIA SPARTA] The metallic covering of the Aspis SHATTERS — the true Shield of Truth emerges, engraved with a lambda, emitting a dark Spartan aura around both Leonidas and the shield. Offensive and defensive power increased! [TRANSFORMATION: The Shell of False Humility falls away — the Shield of Truth ascends]"
         return ""
 
     def can_use_ability(self, ability=None):
@@ -4689,7 +4719,10 @@ class SojiOkita(Character):
                   "desc": "⚔️ [KISOUSANDANZUKI] 'Demon's Claw Three Stage Thrust' - A crouched stance with katana held upside-down above the head. Performs Kisoutotsu with the mechanics of Three Stage Thrust. Surpasses 'godspeed' itself. The Demon Child fully awakens - this attack pierces the boundary between humanity and divinity. [TRANSFORMATION: The Demon Child fully awakens - this attack pierces the boundary between humanity and divinity]"},
             '8': {"name": "⚔️ Tenshou Sandanzuki", "cost": 80, "dmg": (400, 520), "type": "damage",
                   "hits": 3, "range": "extended",
-                  "desc": "⚔️ [TENSHOU SANDANZUKI] 'Heavenly Flight Three Stage Thrust' - An advanced version where Soji lunges forward and delivers three thrusts projected beyond the katana's range, targeting vital points. The same concept as Susano'o's Ama no Magaeshi. The blade 'flies' - sword energy extends beyond physical reach to strike from impossible distances. [TRANSFORMATION: The blade 'flies' - sword energy extends beyond physical reach to strike from impossible distances]"}
+                  "desc": "⚔️ [TENSHOU SANDANZUKI] 'Heavenly Flight Three Stage Thrust' - An advanced version where Soji lunges forward and delivers three thrusts projected beyond the katana's range, targeting vital points. The same concept as Susano'o's Ama no Magaeshi. The blade 'flies' - sword energy extends beyond physical reach to strike from impossible distances. [TRANSFORMATION: The blade 'flies' - sword energy extends beyond physical reach to strike from impossible distances]"},
+            '9': {"name": "⚔️ Kisoutotsu", "cost": 45, "dmg": (230, 300), "type": "damage",
+                  "demon_required": True,
+                  "desc": "⚔️ [KISOUTOTSU] 'Demon Claw Thrust' — Ten'nen Rishin Style secret technique. Requires Demon Child. While crouched on the ground directly in front of his opponent, Soji utilizes the full power of the Demon Child to leap at them, thrusting his katana forward at the same moment — wounding the opponent's side as he shoots past them. [TRANSFORMATION: Soji erupts from a low crouch with demonic speed, the thrust carrying him clean through his opponent's guard]"}
         }
 
         print(f"\n⚔️ VÖLUNDR: Soji x Skalmöld")
@@ -4719,7 +4752,7 @@ class SojiOkita(Character):
                 self.divine_timer = 3
                 self.add_status_effect(StatusEffect.DEMON_RELEASE, 3)
                 self.add_status_effect(StatusEffect.EMPOWER, 3, 2.5)
-                return "👹 [DEMON CHILD RELEASE] DEMON CHILD RELEASE! Soji surpasses all limits! [TRANSFORMATION: The demon within fully awakens - eyes and aura turn crimson, power skyrocketing beyond humanity]"
+                return "👹 [DEMON CHILD RELEASE] DEMON CHILD RELEASE — THE DEMON UNIFIES! Soji's aura transitions from blazing red to the BLUE of the Shinsengumi, the color of those who gave everything for their beliefs. Power rockets beyond the limits of humanity. [TRANSFORMATION: The demon within fully awakens — eyes burn red then aura shifts to Shinsengumi BLUE, dark energy emanating from his mouth and eyes]"
             return "❌ Cannot release Demon Child without awakening!"
         return ""
 
@@ -4737,6 +4770,11 @@ class SojiOkita(Character):
     def get_damage_multiplier(self):
         mult, buffs = super().get_damage_multiplier()
         return mult, buffs
+
+    def can_use_ability(self, ability=None):
+        if ability and ability.get("demon_required") and not self.demon_child_active:
+            return False, "❌ Kisoutotsu requires Demon Child to be active first! Use Demon Child Awakening (ability 3)."
+        return True, ""
 
     def ensure_divine_technique(self):
         if not self.divine_technique and self.volund_active:
@@ -4805,16 +4843,17 @@ class SimoHayha(Character):
                   "organ": True, "effect": "organ",
                   "desc": "💀 [ISÄNMAALLE] 'For the Fatherland' - Simo sacrifices a kidney to power a shot. His kidney becomes the bullet - a piece of himself, offered for Finland. [TRANSFORMATION: His kidney becomes the bullet - a piece of himself, offered for Finland]"},
             '5': {"name": "❄️ Ukonvasara", "cost": 150, "dmg": (600, 800), "type": "damage",
-                  "desc": "❄️ [UKONVASARA] 'Hammer of Ukko' - The hammer of the thunder god - Simo's ultimate shot. The ultimate sacrifice - his pancreas becomes the Hammer of Ukko, the supreme god's weapon. [TRANSFORMATION: The ultimate sacrifice - his pancreas becomes the Hammer of Ukko, the supreme god's weapon]"},
+                  "organ": True, "effect": "ukonvasara", "organ_used": "pancreas",
+                  "desc": "❄️ [UKONVASARA] 'Hammer of Ukko — Afterglow in the Heavens' — Simo sacrifices his pancreas to forge this bullet. It fires as a rapidly rotating headshot bullet — Simo's fastest and most precise. Even Loki, whose reactions were sharp enough to respond to Lemminkäinen, was completely unable to react to it. It earned Simo his 543rd kill and his victory in Ragnarok. [TRANSFORMATION: The ultimate sacrifice — pancreas becomes the Hammer of Ukko, supreme thunder god's weapon, the final bullet of the White Death]"},
             '6': {"name": "🌸 Ilmatar", "cost": 45, "dmg": (280, 360), "type": "damage",
-                  "organ": True, "effect": "organ",
-                  "desc": "🌸 [ILMATAR] 'Profusion of Flowers' - Simo fires a bullet that scatters into countless projectiles midair, mowing down entire armies. Twice the speed of sound. One bullet becomes a thousand - flower petals of death. [TRANSFORMATION: One bullet becomes a thousand - flower petals of death]"},
+                  "organ": True, "effect": "organ", "organ_used": "kidney",
+                  "desc": "🌸 [ILMATAR] 'Profusion of Flowers' — Simo sacrifices a kidney to forge this bullet. It scatters into countless projectiles mid-air in a swirling motion, mowing down entire armies. Twice the speed of sound. One bullet becomes a thousand — flower petals of death that carry all the advantages of a sniper round AND a wide-area shot. [TRANSFORMATION: One bullet becomes a thousand - flower petals of death]"},
             '7': {"name": "🦢 Lemminkäinen", "cost": 55, "dmg": (330, 430), "type": "damage",
-                  "organ": True, "effect": "organ", "blockable": False,
-                  "desc": "🦢 [LEMMINKÄINEN] 'Heaven-Piercing Swan' - A powerful rotating bullet that pierces through anything. Went through Odin, Thor, and Heracles clones plus the Shield of Skuld. The white swan of Finnish myth - piercing heaven itself. [TRANSFORMATION: The white swan of Finnish myth - piercing heaven itself]"},
+                  "organ": True, "effect": "organ", "blockable": False, "organ_used": "liver",
+                  "desc": "🦢 [LEMMINKÄINEN] 'Heaven-Piercing Swan' — Simo sacrifices his liver to forge this bullet. A powerful rotating bullet that can seemingly pierce through anything. Even after Loki shielded with clones of Odin, Thor, and Heracles plus the Shield of Skuld, the bullet pierced through all defenses and struck him in the head. [TRANSFORMATION: The white swan of Finnish myth — liver becomes a heaven-piercing swan of white death]"},
             '8': {"name": "🌬️ Mielikki", "cost": 50, "dmg": (300, 390), "type": "damage",
-                  "organ": True, "effect": "organ",
-                  "desc": "🌬️ [MIELIKKI] 'Breath of the Spirit' - An extremely fast bullet that reaches 'godspeed,' piercing the target in a split second before they can react. The breath of the forest goddess - silent and deadly. [TRANSFORMATION: The breath of the forest goddess - silent and deadly]"}
+                  "organ": True, "effect": "organ", "organ_used": "spleen",
+                  "desc": "🌬️ [MIELIKKI] 'Breath of the Spirit' — Simo sacrifices his spleen to forge this bullet. An extremely fast and precise bullet said to reach 'godspeed', piercing the target in the split fragment of a second before they can react. Simo used this to eliminate what he believed to be a Heracles clone — in truth it was Loki in disguise, who feigned being shot to set up an ambush. [TRANSFORMATION: The breath of the forest goddess — spleen becomes a silent, instant bolt of white death]"}
         }
 
         print(f"\n⚔️ VÖLUNDR: Simo x Ráðgríðr")
@@ -4825,24 +4864,46 @@ class SimoHayha(Character):
         print(f"      god-slaying bullets]")
         return f"✅ Völundr successfully activated for Simo Häyhä!"
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None):
         if effect == "camouflage":
             self.camouflage_active = True
             self.add_status_effect(StatusEffect.CAMOUFLAGE, 2)
             self.add_status_effect(StatusEffect.EVASION, 2, 0.8)
             return "❄️ [CAMOUFLAGE] Camouflage activated! 80% evasion for 2 turns. [TRANSFORMATION: Simo becomes one with the snow - invisible to all]"
+        elif effect == "ukonvasara":
+            # Ukonvasara specifically consumes the pancreas
+            if "pancreas" in self.organs_used:
+                return "❌ [PANCREAS ALREADY SACRIFICED] Ukonvasara cannot be used — the pancreas is gone."
+            self.organs_used.append("pancreas")
+            self.organ_sacrifice += 1
+            damage_taken = 30
+            print(f"  💥 [UKONVASARA] Simo sacrifices his pancreas — the Hammer of Ukko is forged!")
+            self.take_damage(damage_taken)
+            self.add_status_effect(StatusEffect.ORGAN_SAC, 1, stacks=len(self.organs_used))
+            return "❄️ [UKONVASARA] Pancreas becomes the Hammer of Ukko — the fastest, most precise bullet! Simo's 543rd kill. [TRANSFORMATION: Pancreas becomes the Hammer of Ukko — rotating headshot that surpasses all reaction speed]"
         elif effect == "organ":
-            if len(self.organs_used) < len(self.organs):
-                organ = self.organs[len(self.organs_used)]
-                self.organs_used.append(organ)
-                self.organ_sacrifice += 1
-                damage_taken = 30
-                print(f"  💥 [ORGAN SACRIFICE] Simo takes {damage_taken} damage from sacrificing his {organ}!")
-                self.take_damage(damage_taken)
-                self.add_status_effect(StatusEffect.ORGAN_SAC, 1, stacks=len(self.organs_used))
-                organs_left = len(self.organs) - len(self.organs_used)
-                return f"💀 [ISÄNMAALLE] {organ} becomes a divine bullet! Organs left: {organs_left}"
-            return "❌ Cannot sacrifice more organs!"
+            # Determine which specific organ this technique requires
+            required = ability.get("organ_used") if ability else None
+            if required:
+                if required in self.organs_used:
+                    return f"❌ [{required.upper()} ALREADY SACRIFICED] This organ has already been offered. The bullet cannot be forged."
+                if required not in self.organs:
+                    return f"❌ {required} is not available for sacrifice!"
+                organ = required
+            else:
+                # Generic Isänmaalle — use next available non-specific organ
+                available = [o for o in self.organs if o not in self.organs_used]
+                if not available:
+                    return "❌ Cannot sacrifice more organs!"
+                organ = available[0]
+            self.organs_used.append(organ)
+            self.organ_sacrifice += 1
+            damage_taken = 30
+            print(f"  💥 [ORGAN SACRIFICE] Simo takes {damage_taken} damage from sacrificing his {organ}!")
+            self.take_damage(damage_taken)
+            self.add_status_effect(StatusEffect.ORGAN_SAC, 1, stacks=len(self.organs_used))
+            organs_left = len(self.organs) - len(self.organs_used)
+            return f"💀 [ISÄNMAALLE] {organ} becomes a divine bullet! Organs left: {organs_left}"
         return ""
 
     def ensure_divine_technique(self):
@@ -4852,7 +4913,10 @@ class SimoHayha(Character):
                 "cost": 250,
                 "dmg": (700, 900),
                 "type": "damage",
-                "desc": "❄️ [UKONVASARA] Simo's ultimate shot. He sacrifices his pancreas to fire a bullet of pure white death. His pancreas becomes the bullet - the Hammer of Ukko, the supreme god of Finnish mythology, manifested as a sniper round. [TRANSFORMATION: His pancreas becomes the bullet - the Hammer of Ukko, the supreme god of Finnish mythology, manifested as a sniper round]"
+                "effect": "organ",
+                "organ_used": "pancreas",
+                "blockable": False,
+                "desc": "❄️ [UKONVASARA] Simo's ultimate shot — he sacrifices his pancreas to fire the Hammer of Ukko. His fastest and most precise bullet: Loki could not react to it at all, earning Simo his 543rd kill and his Ragnarok victory. [TRANSFORMATION: His pancreas becomes the bullet - the Hammer of Ukko, supreme thunder god's weapon, the White Death's final round]"
             }
         return self.divine_technique
 
@@ -4903,14 +4967,14 @@ class SakataKintoki(Character):
                   "desc": "🐻 [AXE SWING] A basic axe swing."},
             '2': {"name": "🐻 Golden Axe Swing", "cost": 30, "dmg": (170, 230), "type": "damage",
                   "desc": "🐻 [GOLDEN AXE SWING] A basic swing of Kintoki's golden axe. The axe glows with golden light - the first hint of divine power. [TRANSFORMATION: The axe glows with golden light - the first hint of divine power]"},
-            '3': {"name": "⚡ Raijin's Power", "cost": 40, "dmg": (220, 290), "type": "damage",
+            '3': {"name": "✨ Aura Strike (Rune of Eirin)", "cost": 40, "dmg": (220, 290), "type": "damage",
                   "effect": "empower",
-                  "desc": "⚡ [RAIJIN'S POWER] Kintoki channels the power of Raijin. Lightning crackles around the axe - the thunder god's power awakens. [TRANSFORMATION: Lightning crackles around the axe - the thunder god's power awakens]"},
+                  "desc": "✨ [AURA STRIKE] Kintoki activates the Rune of Eirin and shapes his golden aura into a concentrated burst of force. The Great Light Goddess Eirin's power flows through him — golden light transmutes into a devastating strike. [TRANSFORMATION: The Dagaz rune glows as Kintoki's aura is shaped and transmuted into a weapon of light]"},
             '4': {"name": "✨ Rune of Eirin", "cost": 35, "dmg": (0, 0), "type": "buff", "effect": "rune",
                   "desc": "✨ [RUNE OF EIRIN] Kintoki activates the ancient Rune of Eirin. The Dagaz rune on his palm glows - the primordial power of his ancestor awakens. Cannot be used again for 5 turns. [TRANSFORMATION: The Dagaz rune on his palm glows - the primordial power of his ancestor awakens]"},
             '5': {"name": "🐻 Golden Lightning Axe", "cost": 100, "dmg": (470, 610), "type": "damage",
                   "effect": "flash", "hits": 2,
-                  "desc": "🐻 [GOLDEN LIGHTNING AXE] Kintoki transforms his axe into pure lightning. The axe becomes living lightning - a double strike that flashes faster than the eye can follow. [TRANSFORMATION: The axe becomes living lightning - a double strike that flashes faster than the eye can follow]"}
+                  "desc": "🐻 [GOLDEN LIGHTNING AXE - FURIOUS FLASH] A two-stage technique requiring the Rune of Eirin. Stage 1: Kintoki engulfs himself and his axe in golden light, holds it over his left shoulder, then swings horizontally — projecting a colossal axe-head-shaped arc of golden light as a ranged slashing projectile. Stage 2: The moment the first swing completes, Kintoki leaps forward, channels his light into electricity, and swings back in the reverse direction — a close-range electrified return swing that crackles with lightning on impact. [TRANSFORMATION: The axe becomes pure golden lightning — first a flying arc of destruction, then an electrified follow-through that completes the Furious Flash]"}
         }
 
         print(f"\n⚔️ VÖLUNDR: Kintoki x Skeggjöld")
@@ -4938,7 +5002,7 @@ class SakataKintoki(Character):
             return "❌ [RUNE NEEDED] Need to activate Rune of Eirin first!"
         elif effect == "empower":
             self.add_status_effect(StatusEffect.EMPOWER, 1, 1.3)
-            return "⚡ [RAIJIN'S POWER] Lightning crackles around the axe!"
+            return "✨ [AURA STRIKE] Kintoki shapes the Rune of Eirin's golden aura into a burst of transmuted force!"
         return ""
 
     def update_status_effects(self):
@@ -7187,6 +7251,9 @@ class RagnarokGame:
 
                         if "effect" in ability and ability["effect"] not in ["bind", "hymn_wolves"]:
                             if hasattr(character, 'apply_effect'):
+                                # Pass organ_used to organ-sacrifice characters (Simo)
+                                if ability.get("organ_used") and ability["effect"] == "organ":
+                                    character._pending_organ = ability["organ_used"]
                                 result = character.apply_effect(ability["effect"], target=target)
                                 if result:
                                     print_ability_result(result)
