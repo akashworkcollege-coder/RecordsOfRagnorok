@@ -1653,7 +1653,10 @@ class Shiva(Character):
             '5': {"name": "🕉️ Deva Loka", "cost": 70, "dmg": (350, 450), "type": "damage", "karma_only": True,
                   "desc": "🕉️ [DEVA LOKA] Shiva's spinning heel kick, delivered from the realm of the gods. Each rotation generates enough force to shatter divine weapons. [TRANSFORMATION: Each rotation generates enough force to shatter divine weapons]"},
             '6': {"name": "🔄 Unpredictable Rhythm", "cost": 0, "dmg": (0, 0), "type": "passive",
-                  "desc": "🔄 [UNPREDICTABLE RHYTHM] Shiva's dance follows no predictable pattern. His movements seem chaotic but follow the divine rhythm of destruction itself, making his attacks impossible to anticipate. [PASSIVE: His movements seem chaotic but follow the divine rhythm of destruction itself]"}
+                  "desc": "🔄 [UNPREDICTABLE RHYTHM] Shiva's dance follows no predictable pattern. His movements seem chaotic but follow the divine rhythm of destruction itself, making his attacks impossible to anticipate. [PASSIVE: His movements seem chaotic but follow the divine rhythm of destruction itself]"},
+            '7': {"name": "💫 Hidden Treasure of the Indian Pantheon", "cost": 65, "dmg": (200, 260), "type": "damage",
+                  "multi": 3, "effect": "hidden_treasure",
+                  "desc": "💫 [HIDDEN TREASURE OF THE INDIAN PANTHEON] Shiva's go-to move — a blazing martial dance that unleashes multi-hit attacks at enhanced speed. His movements become so unpredictable that the opponent feels assaulted by many enemies at once, each strike flowing seamlessly into the next. [TRANSFORMATION: The opponent is overwhelmed — it feels as though a dozen warriors strike from every angle simultaneously]"}
         }
 
     def apply_effect(self, effect, target=None):
@@ -1670,6 +1673,9 @@ class Shiva(Character):
             self.add_status_effect(StatusEffect.BURN, 5)
             self.add_status_effect(StatusEffect.EMPOWER, 5, 2.0)
             return "💓 [TANDAVA KARMA] SHIVA'S HEART ACCELERATES! Blue flames consume his body - massive power boost but he slowly burns! [TRANSFORMATION: Blue flames consume his body - massive power boost but he slowly burns]"
+        elif effect == "hidden_treasure":
+            self.add_status_effect(StatusEffect.EMPOWER, 2, 1.3)
+            return "💫 [HIDDEN TREASURE] SHIVA UNLEASHES HIS GO-TO MOVE! A blazing martial dance — multi-hit assault from all angles! The opponent feels surrounded by dozens of warriors! [TRANSFORMATION: His dance accelerates into pure chaos, each limb a separate attacker]"
         return ""
 
     def take_damage(self, dmg, ignore_defense=False):
@@ -1882,7 +1888,7 @@ class Hades(Character):
             1400, 460,
             [Realm.GODLY_STRENGTH, Realm.GODLY_ENDURANCE]
         )
-        self.volund_weapon = "Bident of the Dead (冥府の二又槍)"
+        self.volund_weapon = "Bident of the Dead (冥府の二又槍) — Forged from the remnants of Poseidon's trident, fused as tribute to his fallen brother. A fin-like protrusion extends from the shaft where the divine trident was joined."
         self.round = 7
         self.affiliation = "Gods"
         self.ichor_active = False
@@ -2009,7 +2015,7 @@ class Beelzebub(Character):
             '4': {"name": "🦟 Sorath Tau", "cost": 70, "dmg": (350, 430), "type": "damage",
                   "desc": "🦟 [SORATH TAU] 'Prayer of Darkness' - The final glyph - a cross of pure darkness. Dark energy crucifies opponents with shadows. [TRANSFORMATION: Dark energy crucifies opponents with shadows]"},
             '5': {"name": "🦟 Sorath Resh", "cost": 85, "dmg": (430, 530), "type": "damage",
-                  "desc": "🦟 [SORATH RESH] 'Satan's Horns' - The head glyph - Beelzebub creates a massive sphere of compressed darkness. A sphere of pure annihilation forms in his palm. [TRANSFORMATION: A sphere of pure annihilation forms in his palm]"},
+                  "desc": "🦟 [SORATH RESH] 'Satan's Horns' - The head glyph - Using both his right index and middle fingers, Beelzebub pierces the opponent's chest, then extends his resonance blade inward to crush their heart from the inside. A strike so precise it bypasses armor entirely. [TRANSFORMATION: Two fingers plunge forward — the resonance blade extends within, crushing the heart]"},
             '6': {"name": "💀 Lilith's Mark", "cost": 0, "dmg": (0, 0), "type": "passive",
                   "desc": "💀 [LILITH'S MARK] The mark of Lilith allows Beelzebub to cheat death once per battle. The rose tattoo on his chest glows, refusing to let him die. [TRANSFORMATION: The rose tattoo on his chest glows, refusing to let him die]"},
             '7': {"name": "🦟 CHAOS", "cost": 150, "dmg": (550, 700), "type": "damage", "taboo": True,
@@ -2207,6 +2213,7 @@ class Susanoo(Character):
         self.weapon_form = "onikiri"
         self.musouken_active = False
         self.shinra_active = False  # FIXED: tracks active counter-parry state
+        self.sword_broken = False  # Musouken unlocks only after sword is shattered
 
         self.divine_technique = {
             "name": "🌪️ MUSOUKEN: Unarmed Sword",
@@ -2231,7 +2238,7 @@ class Susanoo(Character):
                   "desc": "🌪️ [AMA NO MAGAESHI: YAKUMO] 'Eight Clouds Reverse Heavenly Demon' - A multi-layered heavenly reverse. Eight clouds of destruction form around the opponent. [TRANSFORMATION: Eight clouds of destruction form around the opponent]"},
             '7': {"name": "⚔️ Musouken", "cost": 150, "dmg": (550, 700), "type": "damage", "invisible": True,
                   "effect": "musouken",
-                  "desc": "⚔️ [MUSOUKEN] 'Unarmed Sword' - The unarmed sword - an invisible blade that cuts only the inside. Can only be used twice. Nothingness itself becomes a blade, visible only to those who have reached the peak of swordsmanship. [TRANSFORMATION: Nothingness itself becomes a blade, visible only to those who have reached the peak of swordsmanship]"},
+                  "desc": "⚔️ [MUSOUKEN] 'Unarmed Sword' - A desperate last resort unlocked only after Susano'o's sword is shattered. An invisible blade of nothingness that cuts only the inside. Can only be used twice. 🔒 LOCKED until sword is broken. [TRANSFORMATION: Nothingness itself becomes a blade, visible only to those who have reached the peak of swordsmanship]"},
             '8': {"name": "🐦‍⬛ Yatagarasu Form", "cost": 40, "dmg": (0, 0), "type": "buff", "effect": "yatagarasu",
                   "desc": "🐦‍⬛ [YATAGARASU FORM] Susano'o transforms into the three-legged crow Yatagarasu. 80% evasion for 2 turns. Susano'o becomes the divine crow, watching all swordsmen throughout history. [TRANSFORMATION: Susano'o becomes the divine crow, watching all swordsmen throughout history]"},
             '9': {"name": "⚔️ Switch Weapon", "cost": 50, "dmg": (0, 0), "type": "buff", "effect": "switch_weapon",
@@ -2240,6 +2247,8 @@ class Susanoo(Character):
 
     def apply_effect(self, effect, target=None):
         if effect == "musouken":
+            if not self.sword_broken:
+                return "❌ [MUSOUKEN LOCKED] Musouken can only be unleashed after the sword is shattered! Susano'o needs his blade broken to awaken the Unarmed Sword."
             if self.musouken_used < self.max_musouken:
                 self.musouken_used += 1
                 self.musouken_active = True
@@ -2294,6 +2303,13 @@ class Susanoo(Character):
         if had_shinra and not self.has_status_effect(StatusEffect.COUNTER_READY):
             self.shinra_active = False
             print(f"  👁️ Shinra Yaoyorozu — counter window closes.")
+
+    def take_damage(self, dmg, ignore_defense=False):
+        actual_damage = super().take_damage(dmg, ignore_defense)
+        if not self.sword_broken and actual_damage >= 200:
+            self.sword_broken = True
+            print(f"  ⚔️ [SWORD SHATTERED] Susano'o's divine sword is destroyed! MUSOUKEN UNLOCKED — the Unarmed Sword awakens from desperation!")
+        return actual_damage
 
     def ensure_divine_technique(self):
         if not self.divine_technique:
@@ -2735,8 +2751,9 @@ class Odin(Character):
         self.affiliation = "Gods"
         self.form = "Old"
         self.life_theft_active = False
-        self.active_treasure = None
-        self.treasure_timer = 0
+        self.active_treasures = set()  # Multiple treasures can be active simultaneously
+        self.treasure_timers = {}   # Per-treasure timers {name: turns_remaining}
+        self.yggdrasil_awakening = False  # All 4 treasures at once
         self.drain_timer = 0
 
         self.divine_technique = {
@@ -2838,11 +2855,12 @@ class Odin(Character):
             # Hymn 6 — Hel Víta (existing, moved to key '9')
             '9': {
                 "name": "🔮 6th Galder: Hel Víta", "cost": 45, "dmg": (240, 320), "type": "damage",
+                "effect": "hymn_hel_vita",
                 "desc": (
-                    "🔮 [6TH GALDER: HEL VÍTA] 'Counter-Curse Shredding Shadow' — Odin chants "
-                    "a cursed hymn that drains the life force from his opponent. Dark runes "
-                    "form in the air, each one draining vitality. "
-                    "[TRANSFORMATION: Dark runes form in the air, each one draining vitality]"
+                    "🔮 [6TH GALDER: HEL VÍTA] 'Shockwave of the Dead' — Odin lifts the opponent off the ground with a "
+                    "devastating impact before releasing a concussive shockwave that sends them crashing into the arena walls. "
+                    "Powerful enough to hurl a giant across the battlefield. STUN applied on hit. "
+                    "[TRANSFORMATION: The opponent is lifted airborne — then flung backward by a divine shockwave]"
                 )
             },
             # Hymn 7 — frost rune
@@ -3105,6 +3123,11 @@ class Odin(Character):
             )
 
         # ── 18 Hymns ─────────────────────────────────────────────────────
+        elif effect == "hymn_hel_vita":
+            tgt = target if target else self
+            tgt.add_status_effect(StatusEffect.STUN, 1)
+            return "🔮 [6TH GALDER: HEL VÍTA] Odin lifts the opponent skyward — a divine shockwave HURLS them into the arena walls! STUN applied! [TRANSFORMATION: The target crashes against the boundary walls of the arena]"
+
         elif effect == "hymn_bind":
             tgt = target if target else self
             tgt.add_status_effect(StatusEffect.SLOW, 1, 0.5)
@@ -3223,32 +3246,41 @@ class Odin(Character):
 
         # ── Treasures ────────────────────────────────────────────────────
         elif effect == "gram":
-            self.active_treasure = "gram"
-            self.treasure_timer = 3
+            self.active_treasures.add("gram")
+            self.treasure_timers["gram"] = 3
             self.add_status_effect(StatusEffect.GRAM, 3)
             self.add_status_effect(StatusEffect.EMPOWER, 3, 1.5)
-            return (
-                "🗡️ [MANIFEST GRAM] Gram manifested! +50% damage for 3 turns. "
-                "[TRANSFORMATION: The blade materializes from his flesh]"
-            )
+            result = "🗡️ [MANIFEST GRAM] Gram manifested! +50% damage for 3 turns. [TRANSFORMATION: The blade materializes from his flesh]"
+            if self._check_all_treasures():
+                result += " | 🌳 [YGGDRASIL AWAKENING] ALL FOUR TREASURES OF CALAMITY UNITED! THE WORLD TREE STIRS!"
+            return result
         elif effect == "draupnir":
-            self.active_treasure = "draupnir"
-            self.treasure_timer = 3
+            self.active_treasures.add("draupnir")
+            self.treasure_timers["draupnir"] = 3
             self.add_status_effect(StatusEffect.DRAUPNIR, 3)
             self.add_status_effect(StatusEffect.EMPOWER, 3, 1.3)
-            return "💍 [MANIFEST DRAUPNIR] Draupnir manifested! The self-multiplying ring of Chaos!"
+            result = "💍 [MANIFEST DRAUPNIR] Draupnir manifested! The self-multiplying ring of Chaos!"
+            if self._check_all_treasures():
+                result += " | 🌳 [YGGDRASIL AWAKENING] ALL FOUR TREASURES OF CALAMITY UNITED! THE WORLD TREE STIRS!"
+            return result
         elif effect == "egil":
-            self.active_treasure = "egil"
-            self.treasure_timer = 3
+            self.active_treasures.add("egil")
+            self.treasure_timers["egil"] = 3
             self.add_status_effect(StatusEffect.EGIL, 3)
             self.add_status_effect(StatusEffect.SHIELD, 3, 0.5)
-            return "⛑️ [MANIFEST EGIL] Egil manifested! The helmet of Satan focuses dark energy!"
+            result = "⛑️ [MANIFEST EGIL] Egil manifested! The helmet of Satan focuses dark energy!"
+            if self._check_all_treasures():
+                result += " | 🌳 [YGGDRASIL AWAKENING] ALL FOUR TREASURES OF CALAMITY UNITED! THE WORLD TREE STIRS!"
+            return result
         elif effect == "brisingamen":
-            self.active_treasure = "brisingamen"
-            self.treasure_timer = 3
+            self.active_treasures.add("brisingamen")
+            self.treasure_timers["brisingamen"] = 3
             self.add_status_effect(StatusEffect.BRISINGAMEN, 3)
             self.add_status_effect(StatusEffect.FROST, 3)
-            return "📿 [MANIFEST BRISINGAMEN] Brisingamen manifested! Primordial frost radiates!"
+            result = "📿 [MANIFEST BRISINGAMEN] Brisingamen manifested! Primordial frost radiates!"
+            if self._check_all_treasures():
+                result += " | 🌳 [YGGDRASIL AWAKENING] ALL FOUR TREASURES OF CALAMITY UNITED! THE WORLD TREE STIRS!"
+            return result
 
         # ── Battle Form ──────────────────────────────────────────────────
         elif effect == "battle_form":
@@ -3267,6 +3299,15 @@ class Odin(Character):
             )
 
         return ""
+
+    def _check_all_treasures(self):
+        """Returns True and activates Yggdrasil Awakening if all 4 treasures are active."""
+        all_four = {"gram", "draupnir", "egil", "brisingamen"}
+        if all_four.issubset(self.active_treasures):
+            self.yggdrasil_awakening = True
+            self.add_status_effect(StatusEffect.EMPOWER, 3, 2.5)
+            return True
+        return False
 
     # ------------------------------------------------------------------
     # Post-damage hook for world-tree drain (Hymn 16)
@@ -3311,27 +3352,36 @@ class Odin(Character):
                 self.remove_status_effect(StatusEffect.LIFE_DRAIN)
                 print(f"  🌿 Odin's Life Theft fades.")
 
-        if self.treasure_timer > 0:
-            self.treasure_timer -= 1
-            if self.treasure_timer <= 0:
-                self.active_treasure = None
-                print(f"  ⏳ Odin's manifested treasure fades.")
+        expired = [t for t, timer in self.treasure_timers.items() if timer <= 1]
+        for t in expired:
+            del self.treasure_timers[t]
+            self.active_treasures.discard(t)
+            print(f"  ⏳ Odin's {t.title()} fades.")
+        for t in list(self.treasure_timers):
+            self.treasure_timers[t] -= 1
+        was_awakened = self.yggdrasil_awakening
+        self.yggdrasil_awakening = len(self.active_treasures) == 4
+        if was_awakened and not self.yggdrasil_awakening:
+            print("  🌳 [YGGDRASIL AWAKENING ENDS] The Four Treasures are no longer all united.")
 
     # ------------------------------------------------------------------
     # get_damage_multiplier
     # ------------------------------------------------------------------
     def get_damage_multiplier(self):
         mult, buffs = super().get_damage_multiplier()
-        if self.active_treasure == "gram":
+        if "gram" in self.active_treasures:
             mult *= 1.5
             buffs.append("🗡️ GRAM")
-        elif self.active_treasure == "draupnir":
+        if "draupnir" in self.active_treasures:
             mult *= 1.3
             buffs.append("💍 DRAUPNIR")
-        elif self.active_treasure == "egil":
+        if "egil" in self.active_treasures:
             buffs.append("⛑️ EGIL")
-        elif self.active_treasure == "brisingamen":
+        if "brisingamen" in self.active_treasures:
             buffs.append("📿 BRISINGAMEN")
+        if self.yggdrasil_awakening:
+            mult *= 2.5
+            buffs.append("🌳 YGGDRASIL AWAKENING x2.5!")
         return mult, buffs
 
     def ensure_divine_technique(self):
@@ -7533,8 +7583,9 @@ class RagnarokGame:
             elif char.name == "Odin":
                 char.form = "Old"
                 char.life_theft_active = False
-                char.active_treasure = None
-                char.treasure_timer = 0
+                char.active_treasures = set()
+                char.treasure_timers = {}
+                char.yggdrasil_awakening = False
                 char.drain_timer = 0
             elif char.name == "Buddha":
                 char.current_emotion = "serenity"
