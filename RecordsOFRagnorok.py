@@ -1361,13 +1361,10 @@ class Zeus(Character):
             return "👑 [ADAMAS FORM] ADAMAS FORM! Virtually indestructible! But this form destroys his body... [TRANSFORMATION: Zeus's body compresses to diamond-like density, muscles turning inside out]"
         elif effect == "fix_neck":
             if self.neck_fix_available:
-                if self.hp < self.max_hp * 0.3:
-                    self.neck_fix_available = False
-                    self.heal(150)
-                    self.add_status_effect(StatusEffect.NECK_FIX, 999)
-                    return "🩸 [NECK FIX] Zeus fixes his own broken neck! Heals 150 HP. [TRANSFORMATION: Zeus forcibly realigns his vertebrae with his bare hands]"
-                else:
-                    return "❌ Can only use Neck Fix when below 30% HP!"
+                self.neck_fix_available = False
+                self.heal(150)
+                self.add_status_effect(StatusEffect.NECK_FIX, 999)
+                return "🩸 [NECK FIX] Zeus forcibly realigns his broken vertebrae with his bare hands! Heals 150 HP. Even with a shattered neck, his indomitable vitality refuses to yield. [TRANSFORMATION: Zeus forcibly realigns his vertebrae with his bare hands]"
             return "❌ Neck fix already used!"
         return ""
 
@@ -1539,7 +1536,8 @@ class Heracles(Character):
             '5': {"name": "💧 5th Labor: Augean Stables", "cost": 35, "dmg": (200, 260), "type": "damage", "labor": 5,
                   "desc": "💧 [AUGEAN STABLES] Heracles diverts rivers of power into his attacks. Overwhelming opponents with sheer volume like the redirected rivers. [TRANSFORMATION: Overwhelming opponents with sheer volume]"},
             '6': {"name": "🐦 6th Labor: Stymphalian Birds", "cost": 40, "dmg": (220, 290), "type": "damage", "labor": 6,
-                  "desc": "🐦 [STYMPHALIAN BIRDS] Heracles launches rapid strikes like the bronze-feathered birds. Each strike sharp as a blade, a storm of feathers. [TRANSFORMATION: Each strike sharp as a blade]"},
+                  "effect": "stymphalian_wind",
+                  "desc": "🐦 [6TH LABOR: STYMPHALIAN BIRDS] The head of Heracles' club turns into a Stymphalian Bird and produces a powerful gust of wind when swung. The wind is strong enough to blow away all projectiles aimed at Heracles, granting projectile immunity this turn. [TRANSFORMATION: The bronze-feathered bird takes shape on the club — its wings beat a gale that sweeps away all incoming attacks]"},
             '7': {"name": "🐂 7th Labor: Cretan Bull", "cost": 45, "dmg": (240, 310), "type": "damage", "labor": 7,
                   "desc": "🐂 [CRETAN BULL] Heracles wrestles with the power of the Cretan Bull. Using the bull's own strength against it, turning raw power into technique. [TRANSFORMATION: Using the bull's own strength against it]"},
             '8': {"name": "🐴 8th Labor: Mares of Diomedes", "cost": 35, "dmg": (210, 270), "type": "damage", "labor": 8,
@@ -1577,6 +1575,10 @@ class Heracles(Character):
             self.add_status_effect(StatusEffect.DEFEND, 1)
             self.add_status_effect(StatusEffect.SHIELD, 1, 0.5)
             return "🦁 [DIVINE PROTECTION] Heracles braces himself with divine fortitude! Damage reduced by 50% this turn!"
+        elif effect == "stymphalian_wind":
+            self.add_status_effect(StatusEffect.EVASION, 1, 0.9)
+            self.add_status_effect(StatusEffect.DEFEND, 1)
+            return "🐦 [STYMPHALIAN WHIRLWIND] The Stymphalian Bird beats its wings — a powerful gust blows away all incoming projectiles! 90% evasion this turn!"
         return ""
 
     def use_labor(self, labor_num):
@@ -1646,7 +1648,7 @@ class Shiva(Character):
                   "desc": "💃 [TANDAVA DANCE] Shiva begins his cosmic dance of destruction. Each movement flows into the next, building power and momentum as he dances to the rhythm of the cosmos. [TRANSFORMATION: Each movement flows into the next, building power and momentum]"},
             '3': {"name": "🔥 Krittivasa", "cost": 45, "dmg": (230, 300), "type": "damage",
                   "blockable": False,
-                  "desc": "🔥 [KRITTIVASA] Named after Shiva's form 'clad in skin,' this technique strips away defenses. Devastating palm strikes that bypass protection, hitting the soul directly. [TRANSFORMATION: Devastating palm strikes that bypass protection]"},
+                  "desc": "🔥 [KRITTIVASA] 'Tiger Claw Fire Dance' — Named after Shiva's form clad in skin. Shiva leaps into the air and delivers a devastating kick while simultaneously combusting his feet, slicing and burning his opponent. Hot enough to cauterize flesh. [TRANSFORMATION: Shiva descends with a blazing heel, feet wreathed in consuming fire]"},
             '4': {"name": "💓 Tandava Karma", "cost": 100, "dmg": (0, 0), "type": "buff", "effect": "karma",
                   "karma_only": False,
                   "desc": "💓 [TANDAVA KARMA] Shiva forces his heart to beat faster, directly stimulating his atman (spirit). Massive power boost for 5 turns, but his body slowly burns away. Blue flames consume his body - each moment of power brings him closer to ash. [TRANSFORMATION: Blue flames consume his body - each moment of power brings him closer to ash]"},
@@ -1907,13 +1909,13 @@ class Hades(Character):
             '1': {"name": "💀 Bident Thrust", "cost": 25, "dmg": (170, 230), "type": "damage",
                   "desc": "💀 [BIDENT THRUST] A basic thrust of Hades's divine bident. Clean, dignified, and utterly lethal, each thrust carries the weight of the underworld. [TRANSFORMATION: Clean, dignified, and utterly lethal]"},
             '2': {"name": "💀 Persephone-Kallichoron", "cost": 45, "dmg": (240, 320), "type": "damage",
-                  "desc": "💀 [PERSEPHONE-KALLICHORON] 'Iron Hammer of the Netherworld' - Named after the sacred well of Persephone. Flows like water, finding cracks in any defense. [TRANSFORMATION: Flows like water, finding cracks in any defense]"},
+                  "desc": "💀 [PERSEPHONE-KALLICHORON] 'Iron Hammer of the Netherworld' — Hades leaps into the air and drives his bident downward at his opponent with tremendous force. The impact is so powerful it carries through the ground itself, and the winds generated from the jab can injure opponents even on a near miss. [TRANSFORMATION: Hades descends like a hammer of the underworld, the air itself splitting around the bident]"},
             '3': {"name": "💀 Persephone-Lore", "cost": 55, "dmg": (290, 370), "type": "damage",
-                  "desc": "💀 [PERSEPHONE-LORE] 'Destroyer of Storms' - A thrust that carries the weight of Persephone's wisdom. Strikes at the exact moment an opponent's guard drops. [TRANSFORMATION: Strikes at the exact moment an opponent's guard drops]"},
+                  "desc": "💀 [PERSEPHONE-LORE] 'Destroyer of Storms' — Hades charges straight at his opponent and drives his bident forward in a powerful straight thrust. As he does, a concentrated spiral of wind forms around the tip, designed to utterly annihilate whatever it pierces. [TRANSFORMATION: A cyclone of wind concentrates around the bident as Hades charges forward]"},
             '4': {"name": "💀 Persephone-Titan", "cost": 60, "dmg": (330, 410), "type": "damage",
                   "desc": "💀 [PERSEPHONE-TITAN] 'The Earth Crusher' - Hades channels the power of the Titans through his bident. An earth-shattering thrust. [TRANSFORMATION: An earth-shattering thrust]"},
             '5': {"name": "🦵 Cornucopia", "cost": 40, "dmg": (230, 310), "type": "damage",
-                  "desc": "🦵 [CORNUCOPIA] 'Horn of Plenty' - A sweeping kick that embodies the abundance of the underworld. A kick that carries the weight of countless souls. [TRANSFORMATION: A kick that carries the weight of countless souls]"},
+                  "desc": "🦵 [CORNUCOPIA] 'Horn of Plenty' — Hades first swings his bident downward at his opponent while planting his feet. As his opponent blocks the bident, Hades straightens his left leg, raises his right knee, and leans back — delivering a devastating knee strike to the face. [TRANSFORMATION: The bident swing is a feint — the knee rises to the face as the true blow]"},
             '6': {"name": "💧 Ichor Activation", "cost": 40, "dmg": (0, 0), "type": "buff", "effect": "ichor",
                   "desc": "💧 [ICHOR ACTIVATION] Hades activates the ichor flowing through his veins. Divine blood begins to flow, enhancing attacks but draining life. [TRANSFORMATION: Divine blood begins to flow, enhancing attacks but draining life]"},
             '7': {"name": "💀 Ichor-Eos", "cost": 80, "dmg": (400, 500), "type": "damage", "ichor_only": True,
@@ -2012,8 +2014,8 @@ class Beelzebub(Character):
                   "desc": "🛡️ [SORATH SAMEKH] 'Gates of Hell' - Beelzebub generates an almost indestructible force field made of resonances. Left hand resonances create a dark barrier - the gates of Hell itself. Can block Tesla's Plasma Jet Punches and even Thor's Mjölnir. [TRANSFORMATION: Left hand resonances create a dark barrier - the gates of Hell itself]"},
             '3': {"name": "🦟 Sorath Vav", "cost": 55, "dmg": (280, 350), "type": "damage",
                   "desc": "🦟 [SORATH VAV] 'Fallen Angel of Gluttony' - The sixth glyph of power - Beelzebub manifests hooks of darkness. Right hand resonances condense into hooks that tear at the soul. [TRANSFORMATION: Right hand resonances condense into hooks that tear at the soul]"},
-            '4': {"name": "🦟 Sorath Tau", "cost": 70, "dmg": (350, 430), "type": "damage",
-                  "desc": "🦟 [SORATH TAU] 'Prayer of Darkness' - The final glyph - a cross of pure darkness. Dark energy crucifies opponents with shadows. [TRANSFORMATION: Dark energy crucifies opponents with shadows]"},
+            '4': {"name": "🦟 Sorath Tau", "cost": 70, "dmg": (350, 430), "type": "damage", "multi": 3,
+                  "desc": "🦟 [SORATH TAU] 'Prayer of Darkness' — Beelzebub repeatedly thrusts with the Staff of Apomyius in his right hand, amplifying each resonance with even more resonances. A rapid storm of 3 thrusts powerful enough to blow away Tesla's Gematria Zone, and fast enough to be undodgeable. [TRANSFORMATION: The staff becomes a blur as resonance stacks upon resonance in a rapid-fire assault]"},
             '5': {"name": "🦟 Sorath Resh", "cost": 85, "dmg": (430, 530), "type": "damage",
                   "desc": "🦟 [SORATH RESH] 'Satan's Horns' - The head glyph - Using both his right index and middle fingers, Beelzebub pierces the opponent's chest, then extends his resonance blade inward to crush their heart from the inside. A strike so precise it bypasses armor entirely. [TRANSFORMATION: Two fingers plunge forward — the resonance blade extends within, crushing the heart]"},
             '6': {"name": "💀 Lilith's Mark", "cost": 0, "dmg": (0, 0), "type": "passive",
@@ -2889,11 +2891,12 @@ class Odin(Character):
             # Hymn 9 — Vindsskuggr (existing, moved to key '12')
             '12': {
                 "name": "🔮 9th Galder: Vindsskuggr", "cost": 70, "dmg": (370, 470), "type": "damage",
+                "blockable": False, "always_hit": True,
                 "desc": (
-                    "🔮 [9TH GALDER: VINDSSKUGGR] 'Whirling Shadow Wind Fang' — The ninth "
-                    "cursed hymn. Odin summons blades of darkness. Shadows of the wind become "
-                    "physical blades. "
-                    "[TRANSFORMATION: Shadows of the wind become physical blades]"
+                    "🔮 [9TH GALDER: VINDSSKUGGR] 'Whirling Shadow Wind Fang' — Odin engulfs Gungnir in a light aura and chants the ninth hymn. "
+                    "Darkness manifests as runes that surround the spear, bestowing it with supernatural accuracy: Gungnir WILL ALWAYS HIT its target "
+                    "no matter what they do to avoid or defend. After striking, Gungnir returns to Odin's hand. "
+                    "[TRANSFORMATION: Gungnir becomes bound to fate — no evasion, no defense can prevent the hit]"
                 )
             },
             # Hymn 10 — curse (weaken enemy)
