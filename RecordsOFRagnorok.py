@@ -69,6 +69,7 @@ ADDITIONAL FIXES:
 """
 
 import random
+import copy
 import time
 import sys
 import json
@@ -691,6 +692,9 @@ class Character:
 
     def take_damage(self, dmg, ignore_defense=False):
         """FIXED: Returns damage dealt, properly handles ignore_defense and triggers death effects"""
+        # Guard: negative or zero damage is a no-op
+        if dmg <= 0:
+            return 0
         original_dmg = dmg
 
         # Check for possession (Hajun's victims can't control themselves)
@@ -788,7 +792,10 @@ class Character:
         self.remove_status_effect(StatusEffect.VOLUNDR)
         # Restore base ability kit if a snapshot exists
         if hasattr(self, '_base_abilities'):
-            self.abilities = dict(self._base_abilities)
+            self.abilities = copy.deepcopy(self._base_abilities)
+        # FIXED: Clear active realm between battles so realm bonuses don't persist
+        self.active_realm = Realm.NONE
+        self.realm_timer = 0
 
     def get_damage_multiplier(self):
         """FIXED: Pure getter with no side effects"""
@@ -801,6 +808,16 @@ class Character:
         elif self.active_realm == Realm.GODLY_WILL and self.hp < self.max_hp * 0.3:
             mult *= 2.5
             buffs.append("🟣 WILL")
+        elif self.active_realm == Realm.GODLY_SPEED:
+            # FIXED: Speed realm grants +20% damage (faster, harder-to-block strikes)
+            mult *= 1.2
+            buffs.append("🔵 SPEED")
+            if not self.has_status_effect(StatusEffect.EVASION):
+                self.add_status_effect(StatusEffect.EVASION, 1, 0.3)
+        elif self.active_realm == Realm.GODLY_TECHNIQUE:
+            # FIXED: Technique realm grants +30% damage (precision strikes)
+            mult *= 1.3
+            buffs.append("🩷 TECHNIQUE")
 
         if self.divine_mode:
             mult *= 2.0
@@ -1017,7 +1034,7 @@ class Adam(Character):
         )
         self.round = 2
         self.affiliation = "Humanity"
-        self.can_copy = True
+        self.can_copy = False
         self.copy_count = 0
         self.max_copy = 15
         self.copied_techniques = []
@@ -1040,7 +1057,7 @@ class Adam(Character):
         }
         self.abilities['98'] = {"name": "📊 View Copy Statistics", "cost": 0, "dmg": (0, 0), "type": "utility",
                                 "desc": "📊 [COPY ANALYSIS] View detailed statistics about Adam's copied techniques including copy chances, blindness level, and technique mastery."}
-        self._base_abilities = dict(self.abilities)  # FIXED: snapshot after ability 98 is added
+        self._base_abilities = copy.deepcopy(self.abilities)  # FIXED: snapshot after ability 98 is added
 
     def activate_volund(self, valkyrie):
         if valkyrie != Valkyrie.REGINLEIF:
@@ -1050,6 +1067,7 @@ class Adam(Character):
         self.valkyrie_index = valkyrie.index
         self.volund_active = True
         self.volund_weapon = "Brass Knuckles (メリケンサック)"
+        self.can_copy = True
 
         self.divine_technique = {
             "name": "👁️ DIVINE REPLICATION: EYES OF THE LORD",
@@ -1179,6 +1197,16 @@ class Adam(Character):
                 "desc": "👁️ [ULTIMATE COPY] Adam's ultimate technique - combines all copied techniques into one devastating attack. Every technique Adam has ever witnessed flows through him simultaneously, creating the ultimate divine strike. [TRANSFORMATION: Every technique Adam has ever witnessed flows through him simultaneously]"
             }
         return self.divine_technique
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.can_copy = False
+        self.copy_count = 0
+        self.copied_techniques = []
+        self.copied_techniques_data = {}
+        self.technique_view_count = {}
+        self.blindness = 0
+        self.death_activated = False
 
 
 # ============================================================================
@@ -1497,6 +1525,10 @@ class Poseidon(Character):
             }
         return self.divine_technique
 
+    def reset_volund(self):
+        super().reset_volund()
+        self.used_moves = []
+
 
 # ============================================================================
 # HERACLES - God of Fortitude (FIXED with healing labor no longer triggering tattoo)
@@ -1584,7 +1616,11 @@ class Heracles(Character):
 
     def use_labor(self, labor_num):
         if labor_num == 11:
-            return None
+            # FIXED: Labor 11 (Apples of Hesperides) is a HEALING labor — no tattoo spread
+            self.labors_used += 1
+            heal_amount = 150
+            self.heal(heal_amount)
+            return f"🍎 [APPLES OF HESPERIDES] The golden fruit of immortality restores Heracles! Healed {heal_amount} HP! (No tattoo spread — this labor grants life, not death.)"
 
         self.labors_used += 1
         self.tattoo_progress += 8
@@ -1643,7 +1679,7 @@ class Shiva(Character):
         }
 
         self.abilities = {
-            '1': {"name": "🔥 Four Arms Strike", "cost": 30, "dmg": (180, 240), "type": "damage", "multi": 4,
+            '1': {"name": "🔥 Four Arms Strike", "cost": 30, "dmg": (180, 240), "type": "damage", "hits": 4,
                   "desc": "🔥 [FOUR ARMS STRIKE] Shiva attacks with all four arms simultaneously. A barrage of blows from multiple angles, each arm delivering destruction from a different direction. [TRANSFORMATION: A barrage of blows from multiple angles]"},
             '2': {"name": "💃 Tandava Dance", "cost": 50, "dmg": (240, 320), "type": "damage", "effect": "tandava",
                   "desc": "💃 [TANDAVA DANCE] Shiva begins his cosmic dance of destruction. Each movement flows into the next, building power and momentum as he dances to the rhythm of the cosmos. [TRANSFORMATION: Each movement flows into the next, building power and momentum]"},
@@ -1658,7 +1694,7 @@ class Shiva(Character):
             '6': {"name": "🔄 Unpredictable Rhythm", "cost": 0, "dmg": (0, 0), "type": "passive",
                   "desc": "🔄 [UNPREDICTABLE RHYTHM] Shiva's dance follows no predictable pattern. His movements seem chaotic but follow the divine rhythm of destruction itself, making his attacks impossible to anticipate. [PASSIVE: His movements seem chaotic but follow the divine rhythm of destruction itself]"},
             '7': {"name": "💫 Hidden Treasure of the Indian Pantheon", "cost": 65, "dmg": (200, 260), "type": "damage",
-                  "multi": 3, "effect": "hidden_treasure",
+                  "hits": 3, "effect": "hidden_treasure",
                   "desc": "💫 [HIDDEN TREASURE OF THE INDIAN PANTHEON] Shiva's go-to move — a blazing martial dance that unleashes multi-hit attacks at enhanced speed. His movements become so unpredictable that the opponent feels assaulted by many enemies at once, each strike flowing seamlessly into the next. [TRANSFORMATION: The opponent is overwhelmed — it feels as though a dozen warriors strike from every angle simultaneously]"}
         }
 
@@ -1727,6 +1763,13 @@ class Shiva(Character):
             }
         return self.divine_technique
 
+    def reset_volund(self):
+        super().reset_volund()
+        self.arms_remaining = 4
+        self.permanent_arm_loss = False
+        self.tandava_level = 0
+        self.tandava_karma_active = False
+
 
 # ============================================================================
 # ZEROFUKU - God of Misfortune (FIXED with misery scaling)
@@ -1779,7 +1822,7 @@ class Zerofuku(Character):
             self.add_status_effect(StatusEffect.CLEAVER_HEADS, 999, stacks=self.cleaver_heads)
             return f"🎋 [CLEAVER HEADS] The Great Cleaver grows another head! Total heads: {self.cleaver_heads}"
         elif effect == "absorb":
-            self.misery_level += 1
+            self.misery_level = min(7, self.misery_level + 1)
             self.cleaver_heads = min(7, 1 + self.misery_level)
             self.add_status_effect(StatusEffect.MISERY, 3, stacks=self.misery_level)
             self.add_status_effect(StatusEffect.CLEAVER_HEADS, 999, stacks=self.cleaver_heads)
@@ -1806,6 +1849,11 @@ class Zerofuku(Character):
                 "desc": "🎋 [MISERY STORM] Zerofuku transforms his Axe of Misery into a storm of countless black blades. The accumulated misfortune of all humanity manifests as an inescapable rain of destruction. [TRANSFORMATION: The accumulated misfortune of all humanity manifests as an inescapable rain of destruction]"
             }
         return self.divine_technique
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.misery_level = 0
+        self.cleaver_heads = 1
 
 
 # ============================================================================
@@ -2015,7 +2063,7 @@ class Beelzebub(Character):
                   "desc": "🛡️ [SORATH SAMEKH] 'Gates of Hell' - Beelzebub generates an almost indestructible force field made of resonances. Left hand resonances create a dark barrier - the gates of Hell itself. Can block Tesla's Plasma Jet Punches and even Thor's Mjölnir. [TRANSFORMATION: Left hand resonances create a dark barrier - the gates of Hell itself]"},
             '3': {"name": "🦟 Sorath Vav", "cost": 55, "dmg": (280, 350), "type": "damage",
                   "desc": "🦟 [SORATH VAV] 'Fallen Angel of Gluttony' - The sixth glyph of power - Beelzebub manifests hooks of darkness. Right hand resonances condense into hooks that tear at the soul. [TRANSFORMATION: Right hand resonances condense into hooks that tear at the soul]"},
-            '4': {"name": "🦟 Sorath Tau", "cost": 70, "dmg": (350, 430), "type": "damage", "multi": 3,
+            '4': {"name": "🦟 Sorath Tau", "cost": 70, "dmg": (350, 430), "type": "damage", "hits": 3,
                   "desc": "🦟 [SORATH TAU] 'Prayer of Darkness' — Beelzebub repeatedly thrusts with the Staff of Apomyius in his right hand, amplifying each resonance with even more resonances. A rapid storm of 3 thrusts powerful enough to blow away Tesla's Gematria Zone, and fast enough to be undodgeable. [TRANSFORMATION: The staff becomes a blur as resonance stacks upon resonance in a rapid-fire assault]"},
             '5': {"name": "🦟 Sorath Resh", "cost": 85, "dmg": (430, 530), "type": "damage",
                   "desc": "🦟 [SORATH RESH] 'Satan's Horns' - The head glyph - Using both his right index and middle fingers, Beelzebub pierces the opponent's chest, then extends his resonance blade inward to crush their heart from the inside. A strike so precise it bypasses armor entirely. [TRANSFORMATION: Two fingers plunge forward — the resonance blade extends within, crushing the heart]"},
@@ -2025,7 +2073,7 @@ class Beelzebub(Character):
                   "effect": "chaos",
                   "desc": "🦟 [CHAOS] 'No.0: Chaos' - A forbidden technique that creates a sphere of annihilation. Both hands resonate together, creating a black hole that consumes all. [TRANSFORMATION: Both hands resonate together, creating a black hole that consumes all]"}
         }
-        self._base_abilities = dict(self.abilities)  # Snapshot for restoration after battle
+        self._base_abilities = copy.deepcopy(self.abilities)  # Snapshot for restoration after battle
 
     def apply_effect(self, effect, target=None):
         if effect == "palmyra":
@@ -2048,6 +2096,10 @@ class Beelzebub(Character):
             staff_abilities = ['1', '3', '4', '5', '7']  # Palmyra + all Sorath dmg + CHAOS itself
             for key in staff_abilities:
                 self.abilities.pop(key, None)
+            # Canon: Chaos causes Beelzebub's body to be quite injured (self-damage)
+            self_dmg = random.randint(150, 250)
+            self.take_damage(self_dmg, ignore_defense=True)
+            print(f"💥 [SELF-DAMAGE] The black sphere ruptures! Beelzebub takes {self_dmg} damage from his own Chaos!")
             print("💥 [STAFF DESTROYED] The Staff of Apomyius is consumed! Palmyra, Sorath Vav, Sorath Tau, Sorath Resh, and CHAOS are gone PERMANENTLY.")
             return "🦟 [CHAOS] CHAOS UNLEASHED! A black sphere of annihilation forms! The Staff of Apomyius is consumed, creating a void that erases reality. [TRANSFORMATION: The Staff of Apomyius is consumed, creating a void that erases reality]"
         elif effect == "shield":
@@ -2142,7 +2194,7 @@ class Apollo(Character):
 
     def apply_effect(self, effect, target=None):
         if effect == "expectations":
-            self.expectation_bonus += 5
+            self.expectation_bonus = min(100, self.expectation_bonus + 5)
             self.add_status_effect(StatusEffect.EXPECTATION, 3, 1.0 + (self.expectation_bonus / 100))
             return f"☀️ [EXPECTATIONS] Expectations fuel Apollo! Damage +{self.expectation_bonus}% [TRANSFORMATION: Light grows brighter as the crowd's expectations rise]"
         elif effect == "moonlight":
@@ -2193,6 +2245,11 @@ class Apollo(Character):
                 "desc": "🎯 [ARGYROTOXOS] Apollo's ultimate technique. He launches himself like a silver arrow. Apollo's entire body becomes the arrow, covered in blinding light. [TRANSFORMATION: Apollo's entire body becomes the arrow, covered in blinding light]"
             }
         return self.divine_technique
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.expectation_bonus = 0
+        self.next_attack_multiplier = 1.0
 
 
 # ============================================================================
@@ -2269,6 +2326,7 @@ class Susanoo(Character):
             weapons = ["onikiri", "ame-no-murakumo", "totsuka"]
             current_idx = weapons.index(self.weapon_form)
             self.weapon_form = weapons[(current_idx + 1) % 3]
+            self.yatagarasu_form = False  # FIXED: switching weapon exits yatagarasu form
             weapon_names = {"onikiri": "Onikiri (Demon-Slaying Sword) - Balanced form",
                             "ame-no-murakumo": "Ame-no-Murakumo (Heavenly Sword of Gathering Clouds) - +20% damage",
                             "totsuka": "Totsuka (Ten-Hand Sword) - +10% damage, +10% defense"}
@@ -2690,6 +2748,13 @@ class Loki(Character):
                 )
             }
         return self.divine_technique
+
+    def reset_volund(self):
+        super().reset_volund()
+        # Clear all clones between battles
+        for clone in self.clones:
+            clone['active'] = False
+        self.andvaranaut_active = False
 
     def update_status_effects(self):
         """Override to reset Loki's flag state when timed statuses expire."""
@@ -3437,7 +3502,7 @@ class LuBu(Character):
                   "effect": "shatter",
                   "desc": "🏹 [STRONGEST WARRIOR FROM CHINA] Lü Bu crouches low, placing his left hand on the ground while raising his halberd. He leaps forward with devastating force, shattering enemy weapons. The raw power of China's mightiest warrior concentrates into a single explosive leap. [TRANSFORMATION: The raw power of China's mightiest warrior concentrates into a single explosive leap]"}
         }
-        self._base_abilities = dict(self.abilities)
+        self._base_abilities = copy.deepcopy(self.abilities)
 
     def activate_volund(self, valkyrie):
         if valkyrie != Valkyrie.RANDGRIZ:
@@ -3523,7 +3588,7 @@ class KojiroSasaki(Character):
             '2': {"name": "⚔️ Basic Slash", "cost": 15, "dmg": (120, 170), "type": "damage",
                   "desc": "⚔️ [BASIC SLASH] A basic sword slash."}
         }
-        self._base_abilities = dict(self.abilities)
+        self._base_abilities = copy.deepcopy(self.abilities)
 
     def activate_volund(self, valkyrie):
         if valkyrie != Valkyrie.HRIST:
@@ -3718,7 +3783,7 @@ class JackTheRipper(Character):
                    "weapon": "Dear God", "max_uses": 1, "uses_left": 1,
                    "desc": "🩸 [DEAR GOD] Jack's final technique — dedicated to Heracles. After feigning an attack, Jack drops his weapon and falls, pretending to faint to lower the opponent's guard. The moment they believe they've won, Jack drives BOTH hands into the opponent's torso. His gloves are completely soaked in his own blood — enough blood to transform them into a Divine Weapon capable of ignoring divine durability and directly striking the interior of their body. [TRANSFORMATION: Blood-soaked Magic Gloves become DIVINE BODY-PIERCING WEAPONS — named for Heracles]"}
         }
-        self._base_abilities = dict(self.abilities)
+        self._base_abilities = copy.deepcopy(self.abilities)
 
     def activate_volund(self, valkyrie):
         if valkyrie != Valkyrie.HLÖKK:
@@ -3927,7 +3992,7 @@ class RaidenTameemon(Character):
             '1': {"name": "💪 Basic Strike", "cost": 15, "dmg": (130, 180), "type": "damage",
                   "desc": "💪 [BASIC STRIKE] A basic sumo strike."}
         }
-        self._base_abilities = dict(self.abilities)
+        self._base_abilities = copy.deepcopy(self.abilities)
 
     def activate_volund(self, valkyrie):
         if valkyrie != Valkyrie.THRUD:
@@ -4084,7 +4149,7 @@ class Buddha(Character):
             '7': {"name": "🌀 Zerofuku Fusion", "cost": 80, "dmg": (0, 0), "type": "buff", "effect": "zerofuku_fusion",
                   "desc": "🌀 [ZEROFUKU FUSION] Buddha absorbs the accumulated misfortune and suffering of Zerofuku — the god of misery who was once the god of fortune. All that pain, all that sorrow, transforms into the ultimate divine weapon: the Great Nirvana Sword Zero. Can only be used once. [TRANSFORMATION: Zerofuku's very soul dissolves into light and reforms as a seven-branched divine blade in Buddha's hand]"},
         }
-        self._base_abilities = dict(self.abilities)
+        self._base_abilities = copy.deepcopy(self.abilities)
 
     def activate_volund(self, valkyrie):
         return "❌ Buddha is a former god — he walks alone. No Völundr."
@@ -4255,7 +4320,7 @@ class Buddha(Character):
         self.story_trigger = False
         self.divine_technique = None
         # Restore full 7-ability base kit including fusion option
-        self.abilities = dict(self._base_abilities)
+        self.abilities = copy.deepcopy(self._base_abilities)
         # Ensure fusion ability is present (in case base snapshot was taken without it)
         if '7' not in self.abilities:
             self.abilities['7'] = {
@@ -4267,6 +4332,9 @@ class Buddha(Character):
         # Restore '6b' (Karma Nirodha Samsara) if not in base snapshot
         if '6b' not in self.abilities and '6b' in self._base_abilities:
             self.abilities['6b'] = self._base_abilities['6b']
+        # Reset emotion and future_sight to initial state
+        self.current_emotion = "serenity"
+        self.future_sight_active = True
 
 
 # ============================================================================
@@ -4294,7 +4362,7 @@ class QinShiHuang(Character):
             '1': {"name": "👑 Imperial Strike", "cost": 15, "dmg": (130, 180), "type": "damage",
                   "desc": "👑 [IMPERIAL STRIKE] A basic strike from the First Emperor."}
         }
-        self._base_abilities = dict(self.abilities)
+        self._base_abilities = copy.deepcopy(self.abilities)
 
     def activate_volund(self, valkyrie):
         if valkyrie != Valkyrie.ALVITR:
@@ -4389,6 +4457,18 @@ class QinShiHuang(Character):
             return f"🔥 [PHOENIX COUNTER] Qin redirects the attack for {counter_damage} damage!"
         return None
 
+    def get_damage_multiplier(self):
+        mult, buffs = super().get_damage_multiplier()
+        # FIXED: chi_flow (Star Eyes active) grants +20% damage — seeing Chi cruxes improves accuracy
+        if self.chi_flow:
+            mult *= 1.2
+            buffs.append("✨ CHI FLOW +20%")
+        # Phoenix power amplifies next attack when counter is ready
+        if getattr(self, 'phoenix_active', False) and getattr(self, 'counter_ready', False):
+            mult *= 1.3
+            buffs.append("🔥 PHOENIX POWER +30%")
+        return mult, buffs
+
     def ensure_divine_technique(self):
         if not self.divine_technique and self.volund_active:
             self.divine_technique = {
@@ -4424,7 +4504,7 @@ class NikolaTesla(Character):
             '1': {"name": "⚡ Basic Punch", "cost": 15, "dmg": (120, 170), "type": "damage",
                   "desc": "⚡ [BASIC PUNCH] A basic punch."}
         }
-        self._base_abilities = dict(self.abilities)
+        self._base_abilities = copy.deepcopy(self.abilities)
 
     def activate_volund(self, valkyrie):
         if valkyrie != Valkyrie.GÖNDUL:
@@ -4508,6 +4588,18 @@ class NikolaTesla(Character):
             return "⚡ [ZERO MAX] Tesla reaches ZERO MAX — absolute maximum speed! [TRANSFORMATION: Every neuron fires simultaneously — Tesla becomes a blur even gods cannot track]"
         return ""
 
+    def get_damage_multiplier(self):
+        mult, buffs = super().get_damage_multiplier()
+        # FIXED: Gematria Zone active grants +15% damage — Tesla controls the battlefield
+        if self.gematria_zone_active:
+            mult *= 1.15
+            buffs.append("🔬 GEMATRIA ZONE +15%")
+        # Tesla Step active: grants slight damage bonus from unpredictable positioning
+        if self.has_status_effect(StatusEffect.TESLA_STEP):
+            mult *= 1.1
+            buffs.append("⚡ TESLA STEP +10%")
+        return mult, buffs
+
     def ensure_divine_technique(self):
         if not self.divine_technique and self.volund_active:
             self.divine_technique = {
@@ -4541,7 +4633,7 @@ class Leonidas(Character):
             '1': {"name": "🛡️ Spartan Kick", "cost": 15, "dmg": (140, 190), "type": "damage",
                   "desc": "🛡️ [SPARTAN KICK] The iconic Spartan kick."}
         }
-        self._base_abilities = dict(self.abilities)
+        self._base_abilities = copy.deepcopy(self.abilities)
 
     def activate_volund(self, valkyrie):
         if valkyrie != Valkyrie.GEIRÖLUL:
@@ -4677,7 +4769,7 @@ class SojiOkita(Character):
             '1': {"name": "⚔️ Quick Draw", "cost": 15, "dmg": (130, 180), "type": "damage",
                   "desc": "⚔️ [QUICK DRAW] A quick sword draw."}
         }
-        self._base_abilities = dict(self.abilities)
+        self._base_abilities = copy.deepcopy(self.abilities)
 
     def activate_volund(self, valkyrie):
         if valkyrie != Valkyrie.SKALMÖLD:
@@ -4811,7 +4903,7 @@ class SimoHayha(Character):
             '1': {"name": "❄️ Rifle Shot", "cost": 15, "dmg": (130, 180), "type": "damage",
                   "desc": "❄️ [RIFLE SHOT] A precise rifle shot."}
         }
-        self._base_abilities = dict(self.abilities)
+        self._base_abilities = copy.deepcopy(self.abilities)
 
     def activate_volund(self, valkyrie):
         if valkyrie != Valkyrie.RÁÐGRÍÐR:
@@ -4942,7 +5034,7 @@ class SakataKintoki(Character):
             '1': {"name": "🐻 Axe Swing", "cost": 15, "dmg": (140, 190), "type": "damage",
                   "desc": "🐻 [AXE SWING] A basic axe swing."}
         }
-        self._base_abilities = dict(self.abilities)
+        self._base_abilities = copy.deepcopy(self.abilities)
 
     def activate_volund(self, valkyrie):
         if valkyrie != Valkyrie.SKEGGJÖLD:
@@ -6861,7 +6953,7 @@ class RagnarokGame:
 
                 abil = enemy.abilities[pattern_key]
                 if enemy.energy >= abil.get("cost", 25):
-                    enemy.energy -= abil.get("cost", 25)
+                    enemy.energy = max(0, enemy.energy - abil.get("cost", 25))
                     targets = [c for c in party if c.is_alive()]
                     if targets:
                         t = random.choice(targets)
@@ -6916,7 +7008,7 @@ class RagnarokGame:
 
         first_abil = list(enemy.abilities.values())[0]
         if enemy.energy >= first_abil.get("cost", 25):
-            enemy.energy -= first_abil.get("cost", 25)
+            enemy.energy = max(0, enemy.energy - first_abil.get("cost", 25))
             targets = [c for c in party if c.is_alive()]
             if targets:
                 t = random.choice(targets)
@@ -7157,7 +7249,7 @@ class RagnarokGame:
                 confirm = input("\nUse this Divine Technique? (y/n): ").strip().lower()
                 if confirm != 'y':
                     return False
-                character.energy -= character.divine_technique['cost']
+                character.energy = max(0, character.energy - character.divine_technique['cost'])
                 target = self.select_target()
                 if target:
                     dmg = random.randint(character.divine_technique['dmg'][0], character.divine_technique['dmg'][1])
@@ -7199,7 +7291,7 @@ class RagnarokGame:
                             print(f"{character.name}'s pride wastes the turn! (-{cost}E)")
                         return True
 
-                character.energy -= ability["cost"]
+                character.energy = max(0, character.energy - ability["cost"])
 
                 if ability.get("type") == "damage":
                     target = self.select_target()
