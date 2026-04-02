@@ -70,6 +70,7 @@ ADDITIONAL FIXES:
 
 import random
 import copy
+import copy as _copy
 import time
 import sys
 import json
@@ -90,10 +91,33 @@ VICTORY_DELAY = 1.5
 SAVE_FILE = "ragnarok_save.json"
 
 
+def _word_wrap(text, width=80, first_indent="  ", cont_indent="    "):
+    """Word-wrap text. First line: first_indent. Continuations: cont_indent.
+    [TRANSFORMATION:...] is handled inline — it does NOT get its own prefix line."""
+    if not text:
+        return []
+    lines = []
+    current = first_indent
+    for word in text.split():
+        if current == first_indent or current == cont_indent:
+            current += word
+        elif len(current) + 1 + len(word) <= width:
+            current += " " + word
+        else:
+            lines.append(current)
+            current = cont_indent + word
+    if current.strip():
+        lines.append(current)
+    return lines
+
+
 def slow_print(text, delay=None):
-    """Print text character by character for dramatic effect"""
+    """Print text with optional character-by-character effect."""
     if delay is None:
         delay = TEXT_SPEED
+    if delay <= 0:
+        print(text)
+        return
     for char in text:
         print(char, end='', flush=True)
         time.sleep(delay)
@@ -107,69 +131,81 @@ def clear_screen():
 
 
 def print_ability_result(result):
-    """Print ability result. Each sentence on its own line.
-    [TRANSFORMATION: ...] is always split onto its own indented line.
-    The original text content is NEVER changed — only the display layout."""
+    """Print ability activation text word-wrapped at 80 chars, 4-space continuation.
+    [TRANSFORMATION:...] always starts on its OWN new line with a 4-space indent.
+    |||WEAPON_DESC||| separator: first part printed as header, second as print_desc."""
     if not result:
         return
+
+    # Special case: six_realms returns a header + weapon desc blob separated by |||WEAPON_DESC|||
+    if "|||WEAPON_DESC|||" in result:
+        header_part, desc_part = result.split("|||WEAPON_DESC|||", 1)
+        # Print each header line word-wrapped
+        for raw_line in header_part.split("\n"):
+            raw_line = raw_line.strip()
+            if not raw_line:
+                continue
+            for line in _word_wrap(raw_line, width=80, first_indent="  ", cont_indent="    "):
+                print(line)
+        # Print weapon desc with full word-wrap + TRANSFORMATION on own line
+        if desc_part.strip():
+            print_desc(desc_part.strip())
+        return
+
     if '[TRANSFORMATION:' in result:
         parts = result.split('[TRANSFORMATION:', 1)
         main_text = parts[0].rstrip()
         trans_text = '[TRANSFORMATION:' + parts[1]
-        # Print each sentence of the main text on its own line
-        for line in main_text.split('\n'):
-            s = line.strip()
-            if s:
-                print(f"  {s}")
-        # Print transformation on its own indented line
-        print(f"     ✦ {trans_text}")
+        # Print main text word-wrapped
+        for line in _word_wrap(main_text.strip(), width=80,
+                               first_indent="  ", cont_indent="    "):
+            print(line)
+        # [TRANSFORMATION:...] always starts on its own new line, indented
+        for line in _word_wrap(trans_text.strip(), width=80,
+                               first_indent="    ", cont_indent="    "):
+            print(line)
     else:
-        # Print each sentence on its own line
-        for line in result.split('\n'):
-            s = line.strip()
-            if s:
-                print(f"  {s}")
+        # Handle embedded \n (e.g. multi-line status results)
+        lines_in = result.split("\n")
+        for raw_line in lines_in:
+            raw_line = raw_line.strip()
+            if not raw_line:
+                continue
+            for line in _word_wrap(raw_line, width=80, first_indent="  ", cont_indent="    "):
+                print(line)
 
 
-def print_desc(text, indent="      ", max_words=20):
-    """Print a description as a paragraph, max ~20 words per line."""
+def print_desc(text, indent="  ", max_words=None):
+    """Print a description word-wrapped at 80 chars.
+    [TRANSFORMATION:...] is put on its OWN new line with a 4-space indent."""
     if not text:
         return
-    words = text.split()
-    line = []
-    first_line = True
-    for word in words:
-        line.append(word)
-        if len(line) >= max_words:
-            prefix = "      " if not first_line else ""
-            print(prefix + " ".join(line))
-            line = []
-            first_line = False
-    if line:
-        prefix = "      " if not first_line else ""
-        print(prefix + " ".join(line))
+    if '[TRANSFORMATION:' in text:
+        parts = text.split('[TRANSFORMATION:', 1)
+        main_text = parts[0].rstrip()
+        trans_text = '[TRANSFORMATION:' + parts[1]
+        for line in _word_wrap(main_text.strip(), width=80,
+                               first_indent=indent, cont_indent="    "):
+            print(line)
+        for line in _word_wrap(trans_text.strip(), width=80,
+                               first_indent="    ", cont_indent="    "):
+            print(line)
+    else:
+        for line in _word_wrap(text.strip(), width=80,
+                               first_indent=indent, cont_indent="    "):
+            print(line)
 
 
 def wrap_text(text, width=80):
-    """Wrap text to specified width for better readability"""
-    words = text.split()
-    lines = []
-    current_line = []
-    current_length = 0
-
+    """Wrap text to specified width (used for Völundr weapon descriptions)."""
+    words = text.split(); lines = []; current = []; length = 0
     for word in words:
-        if current_length + len(word) + 1 <= width:
-            current_line.append(word)
-            current_length += len(word) + 1
+        if length + len(word) + 1 <= width:
+            current.append(word); length += len(word) + 1
         else:
-            if current_line:
-                lines.append(' '.join(current_line))
-            current_line = [word]
-            current_length = len(word)
-
-    if current_line:
-        lines.append(' '.join(current_line))
-
+            if current: lines.append(' '.join(current))
+            current = [word]; length = len(word)
+    if current: lines.append(' '.join(current))
     return '\n      '.join(lines)
 
 
@@ -743,7 +779,7 @@ class Character:
         if self.hp <= 0:
             if hasattr(self, 'apply_effect') and hasattr(self, 'death_activated'):
                 if not self.death_activated and self.name == "Adam":
-                    result = self.apply_effect("fight_on_death")
+                    result = self.apply_effect("fight_on_death", ability=None)
                     if result:
                         print_ability_result(result)
             # Check for Beelzebub's Lilith mark
@@ -793,9 +829,6 @@ class Character:
         # Restore base ability kit if a snapshot exists
         if hasattr(self, '_base_abilities'):
             self.abilities = copy.deepcopy(self._base_abilities)
-        # FIXED: Clear active realm between battles so realm bonuses don't persist
-        self.active_realm = Realm.NONE
-        self.realm_timer = 0
 
     def get_damage_multiplier(self):
         """FIXED: Pure getter with no side effects"""
@@ -808,16 +841,6 @@ class Character:
         elif self.active_realm == Realm.GODLY_WILL and self.hp < self.max_hp * 0.3:
             mult *= 2.5
             buffs.append("🟣 WILL")
-        elif self.active_realm == Realm.GODLY_SPEED:
-            # FIXED: Speed realm grants +20% damage (faster, harder-to-block strikes)
-            mult *= 1.2
-            buffs.append("🔵 SPEED")
-            if not self.has_status_effect(StatusEffect.EVASION):
-                self.add_status_effect(StatusEffect.EVASION, 1, 0.3)
-        elif self.active_realm == Realm.GODLY_TECHNIQUE:
-            # FIXED: Technique realm grants +30% damage (precision strikes)
-            mult *= 1.3
-            buffs.append("🩷 TECHNIQUE")
 
         if self.divine_mode:
             mult *= 2.0
@@ -834,7 +857,7 @@ class Character:
 
         return mult, buffs
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         """FIXED: Base apply_effect - to be overridden"""
         return ""
 
@@ -1087,7 +1110,7 @@ class Adam(Character):
         print(f"   → Copy chance +15%")
         return f"✅ Völundr successfully activated for Adam!"
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "fight_on_death" and not self.death_activated:
             self.death_activated = True
             self.hp = 1
@@ -1263,7 +1286,7 @@ class Thor(Character):
                   "desc": "⚡ [GEIRRÖD THOR'S HAMMER] Thor combines his two strongest moves - Thor's Hammer and Awakened Thunder Hammer. This technique matched and overwhelmed Lü Bu's Sky Eater. Mjölnir becomes a thunderstorm incarnate, lightning combining with centrifugal force. [TRANSFORMATION: Mjölnir becomes a thunderstorm incarnate, lightning combining with centrifugal force]"}
         }
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "remove_gloves":
             self.járngreipr_active = False
             self.gloves_damage_timer = 5
@@ -1363,7 +1386,7 @@ class Zeus(Character):
                    "desc": "👊 [FIST THAT SURPASSED TIME] Kronos' final strike which Zeus burnt into his body. A punch so fast that time itself seems to halt. Time becomes frozen - the fist moves before the concept of 'before' exists. [TRANSFORMATION: Time becomes frozen - the fist moves before the concept of 'before' exists]"}
         }
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "meteor_jab":
             self.meteor_jab_count += 1
             speed = 0.01 / (10 ** self.meteor_jab_count)
@@ -1474,7 +1497,7 @@ class Poseidon(Character):
                   "desc": "👑 [PRIDE OF THE SEAS] Poseidon's divine pride makes him refuse to acknowledge any opponent as worthy. This arrogance is both his greatest strength and weakness, driving him to fight with absolute contempt for his enemies. [PASSIVE: This arrogance is both his greatest strength and weakness]"}
         }
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "hydrokinesis":
             if self.water_level >= 10:
                 self.water_level -= 10
@@ -1592,7 +1615,7 @@ class Heracles(Character):
                    "desc": "👊 [APHELES HEROS] 'Great Hero's Fist' - Heracles focuses power in his right arm, enlarging it for a devastating punch that creates a gigantic crater. His arm swells with divine power - the fist of a true hero. [TRANSFORMATION: His arm swells with divine power - the fist of a true hero]"}
         }
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "cerberus":
             self.cerberus_active = True
             self.divine_mode = True
@@ -1616,7 +1639,6 @@ class Heracles(Character):
 
     def use_labor(self, labor_num):
         if labor_num == 11:
-            # FIXED: Labor 11 (Apples of Hesperides) is a HEALING labor — no tattoo spread
             self.labors_used += 1
             heal_amount = 150
             self.heal(heal_amount)
@@ -1698,7 +1720,7 @@ class Shiva(Character):
                   "desc": "💫 [HIDDEN TREASURE OF THE INDIAN PANTHEON] Shiva's go-to move — a blazing martial dance that unleashes multi-hit attacks at enhanced speed. His movements become so unpredictable that the opponent feels assaulted by many enemies at once, each strike flowing seamlessly into the next. [TRANSFORMATION: The opponent is overwhelmed — it feels as though a dozen warriors strike from every angle simultaneously]"}
         }
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "tandava":
             self.tandava_level = 1
             self.add_status_effect(StatusEffect.TANDAVA, 3)
@@ -1812,7 +1834,7 @@ class Zerofuku(Character):
                   "desc": "🎋 [SEVEN LUCKY GODS UNION] Zerofuku channels the power of all Seven Lucky Gods. Each deity adds their unique blessing to his attack, creating a strike of both fortune and misfortune. [TRANSFORMATION: Each deity adds their unique blessing to his attack]"}
         }
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "misery":
             self.misery_level = min(7, self.misery_level + 1)
             self.add_status_effect(StatusEffect.MISERY, 999, stacks=self.misery_level)
@@ -1898,7 +1920,7 @@ class Hajun(Character):
                   "desc": "👹 [POSSESSION] Hajun attempts to possess an enemy, taking control of their body. The target will be unable to act for 2 turns and takes damage each turn from demonic corruption. [TRANSFORMATION: Demonic energy seeks to overwrite the target's soul]"}
         }
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "possess":
             self.possession_active = True
             self.add_status_effect(StatusEffect.DARK_SOUL, 1)
@@ -1914,6 +1936,11 @@ class Hajun(Character):
             target.take_damage(possession_damage, ignore_defense=True)
             return f"👹 [POSSESSION] Hajun possesses {target.name}! They take {possession_damage} damage and cannot act for 2 turns!"
         return None
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.possession_active = False
+        self.possession_target = None
 
     def ensure_divine_technique(self):
         if not self.divine_technique:
@@ -1973,7 +2000,7 @@ class Hades(Character):
                   "desc": "⚔️ [ICHOR DESMOS] 'Four-Blooded Spear of Fate' - Hades infuses his bident with his life force. The spear becomes a LIVING BEING with its own flow of Qi. The bident writhes with life - two prongs merge into a bloodstained living spear. [TRANSFORMATION: The bident writhes with life - two prongs merge into a bloodstained living spear]"}
         }
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "ichor":
             self.ichor_active = True
             self.add_status_effect(StatusEffect.ICHOR, 5)
@@ -2013,6 +2040,12 @@ class Hades(Character):
         if ability and ability.get("ichor_only") and not self.ichor_active:
             return False, "❌ This ability requires Ichor Activation first!"
         return True, ""
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.ichor_active = False
+        self.desmos_active = False
+        self.drain_timer = 0
 
     def ensure_divine_technique(self):
         if not self.divine_technique:
@@ -2075,7 +2108,7 @@ class Beelzebub(Character):
         }
         self._base_abilities = copy.deepcopy(self.abilities)  # Snapshot for restoration after battle
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "palmyra":
             self.add_status_effect(StatusEffect.PALMYRA, 2)
             self.add_status_effect(StatusEffect.EMPOWER, 2, 1.3)
@@ -2128,6 +2161,16 @@ class Beelzebub(Character):
             if self.exhausted_timer <= 0:
                 self.exhausted = False
                 print(f"  😫 [EXHAUSTED] {self.name} recovers from exhaustion!")
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.chaos_used = False
+        self.lilith_mark = True
+        self.lilith_mark_used = False
+        self.exhausted = False
+        self.exhausted_timer = 0
+        if hasattr(self, '_base_abilities'):
+            self.abilities = _copy.deepcopy(self._base_abilities)
 
     def ensure_divine_technique(self):
         if not self.divine_technique:
@@ -2192,7 +2235,7 @@ class Apollo(Character):
                   "desc": "🎯 [ARGYROTOXOS] 'Soul-Piercing Silver Arrow' - Apollo transforms into a living arrow of silver light. Apollo himself becomes the arrow, launching at the speed of light. [TRANSFORMATION: Apollo himself becomes the arrow, launching at the speed of light]"}
         }
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "expectations":
             self.expectation_bonus = min(100, self.expectation_bonus + 5)
             self.add_status_effect(StatusEffect.EXPECTATION, 3, 1.0 + (self.expectation_bonus / 100))
@@ -2305,7 +2348,7 @@ class Susanoo(Character):
                   "desc": "⚔️ [SWITCH WEAPON] Susano'o switches between his divine swords. The blade transforms between Onikiri, Ame-no-Murakumo, and Totsuka. Each form provides different combat bonuses. [TRANSFORMATION: The blade transforms between Onikiri, Ame-no-Murakumo, and Totsuka]"}
         }
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "musouken":
             if not self.sword_broken:
                 return "❌ [MUSOUKEN LOCKED] Musouken can only be unleashed after the sword is shattered! Susano'o needs his blade broken to awaken the Unarmed Sword."
@@ -2371,6 +2414,15 @@ class Susanoo(Character):
             self.sword_broken = True
             print(f"  ⚔️ [SWORD SHATTERED] Susano'o's divine sword is destroyed! MUSOUKEN UNLOCKED — the Unarmed Sword awakens from desperation!")
         return actual_damage
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.musouken_used = 0
+        self.yatagarasu_form = False
+        self.weapon_form = "onikiri"
+        self.musouken_active = False
+        self.shinra_active = False
+        self.sword_broken = False
 
     def ensure_divine_technique(self):
         if not self.divine_technique:
@@ -2525,7 +2577,7 @@ class Loki(Character):
     # ------------------------------------------------------------------
     # apply_effect — handles all buff/utility effects
     # ------------------------------------------------------------------
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "copy":
             if len(self.clones) < self.max_clones or self.andvaranaut_active:
                 # Power scales down with each additional clone
@@ -3176,7 +3228,7 @@ class Odin(Character):
     # ------------------------------------------------------------------
     # apply_effect
     # ------------------------------------------------------------------
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         # ── Ravens ──────────────────────────────────────────────────────
         if effect == "huginn":
             self.add_status_effect(StatusEffect.DEFEND, 1, 0.5)
@@ -3530,7 +3582,7 @@ class LuBu(Character):
         print(f"      that can shatter any defense]")
         return f"✅ Völundr successfully activated for Lü Bu!"
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "break_legs":
             self.legs_broken = True
             self.red_hare_active = True
@@ -3548,6 +3600,11 @@ class LuBu(Character):
             buffs.append("🦯 BROKEN LEGS")
 
         return mult, buffs
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.legs_broken = False
+        self.red_hare_active = False
 
     def ensure_divine_technique(self):
         if not self.divine_technique and self.volund_active:
@@ -3632,7 +3689,7 @@ class KojiroSasaki(Character):
         print(f"      split into two when broken]")
         return f"✅ Völundr successfully activated for Kojiro Sasaki!"
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "scan":
             self.scan_progress += 1
             self.simulations_complete += 1000
@@ -3678,6 +3735,15 @@ class KojiroSasaki(Character):
             buffs.append("⚔️⚔️ DUAL WIELD")
 
         return mult, buffs
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.scan_progress = 0
+        self.simulations_complete = 0
+        self.weapon_broken = False
+        self.dual_wielding = False
+        self.manju_muso = False
+        self.damage_pressure = 0
 
     def ensure_divine_technique(self):
         if not self.divine_technique and self.volund_active:
@@ -3856,7 +3922,7 @@ class JackTheRipper(Character):
             return True
         return False
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "soul_eye":
             self.add_status_effect(StatusEffect.SOUL_EYE, 3)
             self.add_status_effect(StatusEffect.EMPOWER, 3, 1.2)
@@ -3959,6 +4025,16 @@ class JackTheRipper(Character):
 
         print("=" * 110)
 
+    def reset_volund(self):
+        super().reset_volund()
+        self.organ_shift_used = False
+        self.arm_extended = False
+        self.has_environment_weapon = False
+        for ability in self.abilities.values():
+            if "uses_left" in ability and "max_uses" in ability:
+                if ability["max_uses"] != float('inf'):
+                    ability["uses_left"] = ability["max_uses"]
+
     def ensure_divine_technique(self):
         if not self.divine_technique and self.volund_active:
             self.divine_technique = {
@@ -4044,7 +4120,7 @@ class RaidenTameemon(Character):
         print(f"      him to safely release his 100 Seals]")
         return f"✅ Völundr successfully activated for Raiden Tameemon!"
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "release":
             if self.release_available:
                 self.muscle_release = 100
@@ -4068,6 +4144,11 @@ class RaidenTameemon(Character):
             self.add_status_effect(StatusEffect.DEFEND, 1)
             return "⛰️ [MIYAMA] Raiden creates an impenetrable wall of flesh!"
         return ""
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.muscle_release = 0
+        self.release_available = True
 
     def ensure_divine_technique(self):
         if not self.divine_technique and self.volund_active:
@@ -4154,7 +4235,7 @@ class Buddha(Character):
     def activate_volund(self, valkyrie):
         return "❌ Buddha is a former god — he walks alone. No Völundr."
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "six_realms":
             emotions = list(self.weapons.keys())
             self.current_emotion = random.choice(emotions)
@@ -4183,9 +4264,12 @@ class Buddha(Character):
                 "hatred":          "Dark and wrathful    — 🌾 Salakaya Warscythe materializes"
             }
 
-            return (f"🧘 [SIX REALMS] Emotion shifts to: {self.current_emotion.upper()}\n"
-                    f"   {emotion_descriptions[self.current_emotion]}\n"
-                    f"   {weapon['desc']}")
+            # Print weapon desc separately so word-wrap handles it cleanly
+            header = (f"🧘 [SIX REALMS] Emotion shifts to: {self.current_emotion.upper()}\n"
+                      f"   {emotion_descriptions[self.current_emotion]}")
+            # Return header + a special separator + weapon desc
+            # print_ability_result will handle the header, then print_desc handles the weapon desc
+            return header + "\n|||WEAPON_DESC|||" + weapon['desc']
 
         elif effect == "six_realms_strike":
             weapon = self.weapons.get(self.current_emotion)
@@ -4417,7 +4501,7 @@ class QinShiHuang(Character):
             return result
         return super().take_damage(dmg, ignore_defense)
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "blindfold":
             self.star_eyes_active = True
             self.chi_flow = True
@@ -4468,6 +4552,15 @@ class QinShiHuang(Character):
             mult *= 1.3
             buffs.append("🔥 PHOENIX POWER +30%")
         return mult, buffs
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.armor_form = True
+        self.star_eyes_active = False
+        self.chi_flow = False
+        self.phoenix_active = False
+        self.counter_ready = False
+        self.counter_timer = 0
 
     def ensure_divine_technique(self):
         if not self.divine_technique and self.volund_active:
@@ -4562,7 +4655,7 @@ class NikolaTesla(Character):
         print(f"      itself]")
         return f"✅ Völundr successfully activated for Nikola Tesla!"
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "gematria":
             self.gematria_zone_active = True
             self.zero_max = True
@@ -4599,6 +4692,13 @@ class NikolaTesla(Character):
             mult *= 1.1
             buffs.append("⚡ TESLA STEP +10%")
         return mult, buffs
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.teleport_charges = 3
+        self.gematria_zone_active = False
+        self.zero_max = False
+        self.tesla_step = False
 
     def ensure_divine_technique(self):
         if not self.divine_technique and self.volund_active:
@@ -4688,7 +4788,7 @@ class Leonidas(Character):
         print(f"      hammer forms]")
         return f"✅ Völundr successfully activated for Leonidas!"
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "phalanx":
             self.defending = True
             self.add_status_effect(StatusEffect.PHALANX, 1)
@@ -4732,6 +4832,11 @@ class Leonidas(Character):
             buffs.append("🔨 HAMMER FORM")
 
         return mult, buffs
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.shield_form = "base"
+        self.aletheia_active = False
 
     def ensure_divine_technique(self):
         if not self.divine_technique and self.volund_active:
@@ -4825,7 +4930,7 @@ class SojiOkita(Character):
         print(f"      condensed into this moment]")
         return f"✅ Völundr successfully activated for Soji Okita!"
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "demon_child":
             if self.demon_available:
                 self.demon_child_active = True
@@ -4867,6 +4972,14 @@ class SojiOkita(Character):
         if ability and ability.get("demon_required") and not self.demon_child_active:
             return False, "❌ Kisoutotsu requires Demon Child to be active first! Use Demon Child Awakening (ability 3)."
         return True, ""
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.demon_child_active = False
+        self.demon_child_release = False
+        self.illness_effect = 0
+        self.illness_timer = 0
+        self.demon_available = True
 
     def ensure_divine_technique(self):
         if not self.divine_technique and self.volund_active:
@@ -4956,7 +5069,7 @@ class SimoHayha(Character):
         print(f"      god-slaying bullets]")
         return f"✅ Völundr successfully activated for Simo Häyhä!"
 
-    def apply_effect(self, effect, target=None, ability=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "camouflage":
             self.camouflage_active = True
             self.add_status_effect(StatusEffect.CAMOUFLAGE, 2)
@@ -5077,7 +5190,7 @@ class SakataKintoki(Character):
         print(f"      divine form]")
         return f"✅ Völundr successfully activated for Sakata Kintoki!"
 
-    def apply_effect(self, effect, target=None):
+    def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "rune":
             if self.rune_cooldown <= 0:
                 self.rune_of_eirin_active = True
@@ -6953,7 +7066,7 @@ class RagnarokGame:
 
                 abil = enemy.abilities[pattern_key]
                 if enemy.energy >= abil.get("cost", 25):
-                    enemy.energy = max(0, enemy.energy - abil.get("cost", 25))
+                    enemy.energy -= abil.get("cost", 25)
                     targets = [c for c in party if c.is_alive()]
                     if targets:
                         t = random.choice(targets)
@@ -7008,7 +7121,7 @@ class RagnarokGame:
 
         first_abil = list(enemy.abilities.values())[0]
         if enemy.energy >= first_abil.get("cost", 25):
-            enemy.energy = max(0, enemy.energy - first_abil.get("cost", 25))
+            enemy.energy -= first_abil.get("cost", 25)
             targets = [c for c in party if c.is_alive()]
             if targets:
                 t = random.choice(targets)
@@ -7102,8 +7215,9 @@ class RagnarokGame:
                     if abil.get("karma_only") and hasattr(character, 'tandava_karma_active'):
                         if not character.tandava_karma_active:
                             continue
-                    # FIXED: Also filter ichor-only abilities when ichor is not active (Hades)
                     if abil.get("ichor_only") and hasattr(character, 'ichor_active') and not character.ichor_active:
+                        continue
+                    if abil.get("cerberus_only") and hasattr(character, 'cerberus_active') and not character.cerberus_active:
                         continue
                     available[key] = abil
 
@@ -7224,18 +7338,18 @@ class RagnarokGame:
                 if desc_choice in available:
                     abil = available[desc_choice]
                     print("\n" + "─" * 80)
-                    slow_print(f"📖 {abil['name']}", 0.04)
+                    print(f"  {abil['name']}")
+                    stats = []
+                    if abil.get("cost"): stats.append(f"Cost: {abil['cost']}E")
+                    if abil.get("dmg") and abil["dmg"] != (0, 0):
+                        stats.append(f"Damage: {abil['dmg'][0]}-{abil['dmg'][1]}")
+                    if abil.get("hits", 1) > 1: stats.append(f"Hits: {abil['hits']}")
+                    if "uses_left" in abil: stats.append(f"Uses: {abil['uses_left']}/{abil['max_uses']}")
+                    if "views" in abil: stats.append(f"Seen: {abil['views']}x")
+                    if stats: print(f"  {'  |  '.join(stats)}")
                     print("─" * 80)
                     if "desc" in abil:
                         print_desc(abil['desc'])
-                    if "cost" in abil:
-                        print(f"\n⚡ Energy Cost: {abil['cost']}")
-                    if "dmg" in abil and abil["dmg"] != (0, 0):
-                        print(f"💢 Damage: {abil['dmg'][0]}-{abil['dmg'][1]}")
-                    if "views" in abil:
-                        print(f"👁️ Times seen: {abil['views']}")
-                    if "uses_left" in abil:
-                        print(f"📦 Uses left: {abil['uses_left']}/{abil['max_uses']}")
                     print("─" * 80)
                     input("\nPress Enter to continue...")
                 return False
@@ -7243,9 +7357,12 @@ class RagnarokGame:
                 'cost'] and not (character.name == "Kojiro Sasaki" and hasattr(character, 'dual_wielding') and not character.dual_wielding):
                 # FIXED: Confirmation before using divine technique (high cost)
                 dt = character.divine_technique
-                print(f"\n✨ DIVINE TECHNIQUE: {dt['name']}")
-                print(f"   Cost: {dt['cost']}E | Damage: {dt['dmg'][0]}-{dt['dmg'][1]}")
-                print_desc(dt.get('desc', ''))
+                print("\n" + "─" * 80)
+                print(f"  ✦ DIVINE TECHNIQUE: {dt['name']}")
+                print(f"  Cost: {dt['cost']}E  |  Damage: {dt['dmg'][0]}-{dt['dmg'][1]}")
+                print("─" * 80)
+                if dt.get('desc'): print_desc(dt['desc'])
+                print("─" * 80)
                 confirm = input("\nUse this Divine Technique? (y/n): ").strip().lower()
                 if confirm != 'y':
                     return False
@@ -7333,6 +7450,9 @@ class RagnarokGame:
                                 target.take_damage(bite2)
                                 print(f"  🐺 Geri bites for {bite1}! Freki bites for {bite2}!")
                                 print(f"{character.name} uses {ability['name']} for {bite1 + bite2} total damage!")
+                                if hasattr(character, 'apply_effect'):
+                                    r = character.apply_effect("hymn_wolves", target=target, ability=ability)
+                                    if r: print_ability_result(r)
                             else:
                                 target.take_damage(dmg, ignore_defense=ignore_defense)
                                 print(f"{character.name} uses {ability['name']} for {dmg} damage!")
@@ -7343,10 +7463,7 @@ class RagnarokGame:
 
                         if "effect" in ability and ability["effect"] not in ["bind", "hymn_wolves"]:
                             if hasattr(character, 'apply_effect'):
-                                # Pass organ_used to organ-sacrifice characters (Simo)
-                                if ability.get("organ_used") and ability["effect"] == "organ":
-                                    character._pending_organ = ability["organ_used"]
-                                result = character.apply_effect(ability["effect"], target=target)
+                                result = character.apply_effect(ability["effect"], target=target, ability=ability)
                                 if result:
                                     print_ability_result(result)
 
@@ -7371,7 +7488,7 @@ class RagnarokGame:
                     # Loki's clone-creation abilities (Copy, Hveðrung)
                     if "effect" in ability:
                         if hasattr(character, 'apply_effect'):
-                            result = character.apply_effect(ability["effect"])
+                            result = character.apply_effect(ability["effect"], ability=ability)
                             if result:
                                 print_ability_result(result)
                             else:
@@ -7387,7 +7504,7 @@ class RagnarokGame:
                             # Without target=, tgt defaults to self. Pass a target for those effects.
                             _DEBUFF_EFFECTS = {"threads", "hymn_illusion"}
                             _tgt = self.select_target() if ability["effect"] in _DEBUFF_EFFECTS else None
-                            result = character.apply_effect(ability["effect"], target=_tgt)
+                            result = character.apply_effect(ability["effect"], target=_tgt, ability=ability)
                             if result:
                                 print_ability_result(result)
                             else:
