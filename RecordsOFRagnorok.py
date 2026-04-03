@@ -1078,8 +1078,8 @@ class Adam(Character):
                   "effect": "serpent_claws",
                   "desc": "🐍 [SERPENT'S CLAWS] Adam copies the Serpent's attack that once assaulted Eve. His hands grow three times in size with black-green scales and sharp bone claws capable of rending divine flesh. [TRANSFORMATION: Adam's biology morphs - hands become draconic claws]"},
         }
-        self.abilities['98'] = {"name": "📊 View Copy Statistics", "cost": 0, "dmg": (0, 0), "type": "utility",
-                                "desc": "📊 [COPY ANALYSIS] View detailed statistics about Adam's copied techniques including copy chances, blindness level, and technique mastery."}
+        self.abilities['98'] = {"name": "📊 View Copy Statistics", "cost": 0, "dmg": (0, 0), "type": "passive",
+                                "desc": "📊 [COPY ANALYSIS] View detailed statistics about Adam's copied techniques. Use shortcut 98 in the ability menu to open. Shows copy count, blindness level, copied techniques and their damage, and observed techniques with copy chances."}
         self._base_abilities = copy.deepcopy(self.abilities)  # FIXED: snapshot after ability 98 is added
 
     def activate_volund(self, valkyrie):
@@ -1280,7 +1280,7 @@ class Thor(Character):
             '6': {"name": "⚡ Teleport", "cost": 40, "dmg": (0, 0), "type": "utility", "effect": "teleport",
                   "desc": "⚡ [LIGHTNING TELEPORT] Thor teleports using Mjölnir's connection to lightning. 3 uses per battle. Thor becomes one with lightning, instantaneously repositioning anywhere on the battlefield. [TRANSFORMATION: Thor becomes one with lightning, instantaneously repositioning]"},
             '7': {"name": "👁️ Menacing Aura", "cost": 0, "dmg": (0, 0), "type": "passive",
-                  "desc": "👁️ [GODLY PRESENCE] Thor's mere presence radiates divine intimidation. The air crackles with electricity, making lesser beings tremble and even frightening Göll. [TRANSFORMATION: The air crackles with electricity, making lesser beings tremble]"},
+                  "desc": "👁️ [GODLY PRESENCE] Thor's mere presence radiates divine intimidation. The air crackles with electricity — enemies have a 10% chance to flinch and miss their attack each turn. [TRANSFORMATION: The air crackles with electricity, making lesser beings tremble]"},
             '8': {"name": "⚡ Geirröd Thor's Hammer", "cost": 150, "dmg": (500, 650), "type": "damage", "divine": True,
                   "blockable": False,
                   "desc": "⚡ [GEIRRÖD THOR'S HAMMER] Thor combines his two strongest moves - Thor's Hammer and Awakened Thunder Hammer. This technique matched and overwhelmed Lü Bu's Sky Eater. Mjölnir becomes a thunderstorm incarnate, lightning combining with centrifugal force. [TRANSFORMATION: Mjölnir becomes a thunderstorm incarnate, lightning combining with centrifugal force]"}
@@ -1714,7 +1714,7 @@ class Shiva(Character):
             '5': {"name": "🕉️ Deva Loka", "cost": 70, "dmg": (350, 450), "type": "damage", "karma_only": True,
                   "desc": "🕉️ [DEVA LOKA] Shiva's spinning heel kick, delivered from the realm of the gods. Each rotation generates enough force to shatter divine weapons. [TRANSFORMATION: Each rotation generates enough force to shatter divine weapons]"},
             '6': {"name": "🔄 Unpredictable Rhythm", "cost": 0, "dmg": (0, 0), "type": "passive",
-                  "desc": "🔄 [UNPREDICTABLE RHYTHM] Shiva's dance follows no predictable pattern. His movements seem chaotic but follow the divine rhythm of destruction itself, making his attacks impossible to anticipate. [PASSIVE: His movements seem chaotic but follow the divine rhythm of destruction itself]"},
+                  "desc": "🔄 [UNPREDICTABLE RHYTHM] Shiva's dance follows no predictable pattern — each attack has a random ±10% damage variance, making him impossible to read. His movements seem chaotic but follow the divine rhythm of destruction itself. [PASSIVE: Each strike carries a random surge or dip of divine rhythm — impossible to predict]"},
             '7': {"name": "💫 Hidden Treasure of the Indian Pantheon", "cost": 65, "dmg": (200, 260), "type": "damage",
                   "hits": 3, "effect": "hidden_treasure",
                   "desc": "💫 [HIDDEN TREASURE OF THE INDIAN PANTHEON] Shiva's go-to move — a blazing martial dance that unleashes multi-hit attacks at enhanced speed. His movements become so unpredictable that the opponent feels assaulted by many enemies at once, each strike flowing seamlessly into the next. [TRANSFORMATION: The opponent is overwhelmed — it feels as though a dozen warriors strike from every angle simultaneously]"}
@@ -1771,6 +1771,11 @@ class Shiva(Character):
             tandava_bonus = 1.0 + ((self.tandava_level - 1) * 0.1)
             mult *= tandava_bonus
             buffs.append(f"💃 TANDAVA LV{self.tandava_level} +{(self.tandava_level-1)*10}%")
+
+        # Unpredictable Rhythm passive: random ±10% variance each attack
+        rhythm_variance = random.uniform(0.9, 1.1)
+        mult *= rhythm_variance
+        buffs.append(f"🔄 RHYTHM {'▲' if rhythm_variance >= 1.0 else '▼'}{abs(int((rhythm_variance-1)*100))}%")
 
         return mult, buffs
 
@@ -3208,19 +3213,23 @@ class Odin(Character):
                 "name": "🌿 Life Theft/Decay", "cost": 0, "dmg": (0, 0), "type": "passive",
                 "desc": (
                     "🌿 [LIFE THEFT/DECAY] When Odin experiences strong emotions, nearby life "
-                    "withers and dies. Passive aura drains 5 HP from all enemies each turn "
-                    "when Odin's excitement rises. "
-                    "[TRANSFORMATION: Divine excitement causes flowers to wilt]"
+                    "withers and dies. This passive aura is triggered by using the active "
+                    "Life Theft ability (key 22) — which drains 10 HP from all enemies for "
+                    "3 turns. [PASSIVE: Describes Odin's innate life-draining aura — "
+                    "use Life Theft to activate it]"
                 )
             },
             '31': {
                 "name": "📿 18 Cursed Hymns", "cost": 0, "dmg": (0, 0), "type": "passive",
                 "desc": (
-                    "📿 [18 GALDER] Odin knows all 18 runic hymns consisting of 164 verses. "
-                    "Each hymn has unique effects: binding, healing, fire, frost, wisdom, "
-                    "curse, victory, illusion, rune-shield, wolves, death, world-tree drain, "
-                    "Ragnarök foretelling, and the unknowable 18th. "
-                    "[TRANSFORMATION: Ancient Norse runes glow in the air as Odin chants]"
+                    "📿 [18 GALDER] Odin knows all 18 runic hymns. Each is a separate "
+                    "active ability in the DAMAGE and UTILITY sections: "
+                    "Ljóðatal (bind), Lyfjaberg (heal), Þjóðvitni (shackle), Fýrisvellir (fire), "
+                    "Fafnir (damage), Hel Víta (stun), Niflheimr (frost), Mímisbrunnr (wisdom), "
+                    "Vindsskuggr (unavoidable), Galdralag (curse), Sigrdrífumál (victory), "
+                    "Fjölsvinnsmál (illusion), Rígsþula (shield), Geri Freki (wolves+bleed), "
+                    "Vafþrúðnismál (death), Yggdrasil (drain+heal), Völuspá (ragnarök), "
+                    "and The Unknowable (triple debuff). [PASSIVE: Reference guide to all 18 hymns]"
                 )
             },
         }
@@ -3677,9 +3686,9 @@ class KojiroSasaki(Character):
             '5': {"name": "⚔️ Sōenzanko", "cost": 100, "dmg": (430, 550), "type": "damage",
                   "desc": "⚔️ [SŌENZANKO] 'Twin Swallow Tiger' - The ultimate combination technique. Tsubame Gaeshi and Torakiri merge into one devastating combo. [TRANSFORMATION: Tsubame Gaeshi and Torakiri merge into one devastating combo]"},
             '6': {"name": "👁️ Manju Muso", "cost": 0, "dmg": (0, 0), "type": "passive",
-                  "desc": "👁️ [MANJU MUSO] 'Ultimate Vision of Ten Thousand Moves' - Kojiro's Senju Muso evolves to its peak. He can now analyze not just opponents but also vibrations traveling through air and ground, predicting movements with absolute precision. The world itself becomes readable - every vibration tells him where the enemy will strike. [TRANSFORMATION: The world itself becomes readable - every vibration tells him where the enemy will strike]"},
+                  "desc": "👁️ [MANJU MUSO] 'Ultimate Vision of Ten Thousand Moves' — Unlocked after 5 Scans. Kojiro can now analyze vibrations through air and ground, predicting movements with absolute precision. Grants +20% damage permanently while active. The world itself becomes readable — every vibration tells him where the enemy will strike. [PASSIVE: Unlocked by Scanning 5 times — grants permanent +20% damage bonus]"},
             '7': {"name": "🧠 Image Training", "cost": 0, "dmg": (0, 0), "type": "passive",
-                  "desc": "🧠 [IMAGE TRAINING] Kojiro has memorized the attack patterns of every opponent he's ever faced. He can simulate fights with them anytime to improve. All techniques improve over time through mental simulation. [PASSIVE: All techniques improve over time through mental simulation]"}
+                  "desc": "🧠 [IMAGE TRAINING] Kojiro has memorized every opponent he's ever faced. He enters each battle having pre-simulated 1,000 attack scenarios — giving him a head start on reading the enemy. Combined with Scanning, he builds toward Manju Muso faster. [PASSIVE: Starts each battle with 1,000 simulations already complete]"}
         }
 
         print(f"\n⚔️ VÖLUNDR: Kojiro x Hrist")
@@ -3702,6 +3711,12 @@ class KojiroSasaki(Character):
                 self.add_status_effect(StatusEffect.MANJU_MUSO, 999)
             return f"🔍 [SCAN] Scan {self.scan_progress}: {evasion * 100}% evasion, {crit * 100}% crit. [TRANSFORMATION: {self.simulations_complete} simulations complete - every possible move calculated]"
         return ""
+
+    def image_training_bonus(self):
+        """Image Training passive: Kojiro starts each battle with 1 free scan worth of simulation."""
+        if self.volund_active and self.scan_progress == 0:
+            self.simulations_complete = 1000
+            print(f"  🧠 [IMAGE TRAINING] Kojiro enters the battle having pre-simulated {self.simulations_complete:,} attack scenarios!")
 
     def take_damage(self, dmg, ignore_defense=False):
         actual = super().take_damage(dmg, ignore_defense)
@@ -3733,6 +3748,11 @@ class KojiroSasaki(Character):
         if self.dual_wielding:
             mult *= 2.0
             buffs.append("⚔️⚔️ DUAL WIELD")
+
+        # Manju Muso passive: after 5 scans, +20% damage from perfect prediction
+        if self.manju_muso:
+            mult *= 1.2
+            buffs.append("👁️ MANJU MUSO +20%")
 
         return mult, buffs
 
@@ -3777,6 +3797,7 @@ class JackTheRipper(Character):
         self.arm_extended = False
         self.has_environment_weapon = False
         self.organ_shift_used = False
+        self.soul_eye_used = False  # Soul Eye first-attack bonus
 
         self.magic_pouches = {
             "knives": 50,
@@ -3795,7 +3816,7 @@ class JackTheRipper(Character):
                   "desc": "🗡️ [KNIFE STRIKE] A quick knife attack. Jack carries 50 knives in his magic pouches. [MAGIC GLOVES: Turns ordinary knife into DIVINE THROWING BLADE]"},
             '2': {"name": "👁️ Soul Eye", "cost": 0, "dmg": (0, 0), "type": "passive",
                   "weapon": "Soul Eye", "max_uses": float('inf'),
-                  "desc": "👁️ [SOUL EYE] Jack can see the 'color' of people's souls. [PASSIVE ABILITY - NOT A WEAPON]"},
+                  "desc": "👁️ [SOUL EYE] Jack can see the 'color' of people's souls — reading their nature before the first blow lands. Grants +20% damage on his very first attack of the battle. After that, the element of surprise is gone. [PASSIVE: +20% bonus on first attack only, then consumed]"},
             '3': {"name": "🗡️ Throwing Knives", "cost": 25, "dmg": (130, 190), "type": "damage",
                   "weapon": "Throwing Knives", "max_uses": 50, "uses_left": 50,
                   "desc": "🗡️ [THROWING KNIVES] Jack's main weaponry — dozens of small throwing knives which, through his divine gloves, pierce through godly flesh. 50 uses. [MAGIC GLOVES: Turns ordinary throwing knives into DIVINE PIERCING WEAPONS]"},
@@ -3975,6 +3996,15 @@ class JackTheRipper(Character):
                 dmg = 0
         return super().take_damage(dmg, ignore_defense)
 
+    def get_damage_multiplier(self):
+        mult, buffs = super().get_damage_multiplier()
+        # Soul Eye passive: +20% damage on first attack (reading soul color)
+        if not self.soul_eye_used and self.soul_eye:
+            mult *= 1.2
+            buffs.append("👁️ SOUL EYE +20%")
+            self.soul_eye_used = True  # consumed after first strike
+        return mult, buffs
+
     def get_weapon_status(self):
         print("\n" + "=" * 110)
         print("📦 JACK'S MAGIC POUCHES - WEAPON REMAINING:")
@@ -4030,6 +4060,7 @@ class JackTheRipper(Character):
         self.organ_shift_used = False
         self.arm_extended = False
         self.has_environment_weapon = False
+        self.soul_eye_used = False
         for ability in self.abilities.values():
             if "uses_left" in ability and "max_uses" in ability:
                 if ability["max_uses"] != float('inf'):
@@ -4642,7 +4673,7 @@ class NikolaTesla(Character):
                    "desc": "⚡ [TESLA WARP] Tesla warps through space. 3 uses. The Super Tesla Coil synchronizes with particle-dense areas, allowing instantaneous teleportation. [TRANSFORMATION: The Super Tesla Coil synchronizes with particle-dense areas, allowing instantaneous teleportation]"},
             '11': {"name": "⚡ Zero Max", "cost": 0, "dmg": (0, 0), "type": "passive",
                    "effect": "zero_max",
-                   "desc": "⚡ [ZERO MAX] Within Gematria Zone, Tesla's anti-gravity system allows him to reach maximum speed in just the first stride. Super Tesla Particles eliminate inertia - from zero to max in an instant. [TRANSFORMATION: Super Tesla Particles eliminate inertia - from zero to max in an instant]"},
+                   "desc": "⚡ [ZERO MAX] Within Gematria Zone, Tesla's anti-gravity system automatically activates — eliminating inertia so he reaches maximum speed in the very first stride. This passive auto-triggers when Gematria Zone is activated, granting HASTE for 5 turns. [PASSIVE: Auto-activates with Gematria Zone — grants HASTE for 5 turns]"},
             '12': {"name": "⚡ Tesla Step", "cost": 30, "dmg": (0, 0), "type": "buff", "effect": "tesla_step",
                    "desc": "⚡ [TESLA STEP] Tesla floats and moves in unpredictable patterns within Gematria Zone. Tesla Step Wonderful creates numerous afterimages. Super Tesla Particles allow three-dimensional movement - gravity is optional. [TRANSFORMATION: Super Tesla Particles allow three-dimensional movement - gravity is optional]"}
         }
@@ -4661,6 +4692,9 @@ class NikolaTesla(Character):
             self.zero_max = True
             self.add_status_effect(StatusEffect.GEMATRIA_ZONE, 5)
             self.add_status_effect(StatusEffect.ZERO_MAX, 5)
+            # Zero Max passive auto-triggers when Gematria Zone activates
+            self.add_status_effect(StatusEffect.HASTE, 5)
+            print(f"  ⚡ [ZERO MAX — AUTO] Anti-gravity system activates! Tesla reaches maximum speed from first stride!")
             return "🔬 [GEMATRIA ZONE] Gematria Zone activated! [TRANSFORMATION: Super Tesla Particles fill the area - Tesla can now float and teleport within this 9.63m cage]"
         elif effect == "teleport":
             if self.teleport_charges > 0 and self.gematria_zone_active:
@@ -7092,9 +7126,16 @@ class RagnarokGame:
                                 print(f"  {counter_result}")
                                 dmg = 0
 
-                        t.take_damage(dmg, ignore_defense=ignore_defense)
-
-                        print(f"{enemy.name} uses {abil['name']} for {dmg} damage!")
+                        # Menacing Aura passive: 10% miss chance when attacking Thor
+                        has_menacing = any(
+                            'Menacing' in ab.get('name', '')
+                            for ab in getattr(t, 'abilities', {}).values()
+                        )
+                        if has_menacing and random.random() < 0.10:
+                            print(f"  ⚡ [MENACING AURA] {enemy.name} flinches before Thor's divine presence! Attack misses!")
+                        else:
+                            t.take_damage(dmg, ignore_defense=ignore_defense)
+                            print(f"{enemy.name} uses {abil['name']} for {dmg} damage!")
 
                         if adam:
                             is_divine = abil.get("divine", False) or "divine" in abil.get("name", "").lower()
@@ -7280,9 +7321,11 @@ class RagnarokGame:
             elif kojiro_dt_locked and character.divine_technique:
                 print(f"\n  🔒 LOCKED: {character.divine_technique['name']} (requires Re-Völundr dual wield)")
 
-            passive_names = [ab['name'] for ab in character.abilities.values() if ab.get('type') == 'passive']
-            if passive_names:
-                print(f"  ── Always active: {' | '.join(passive_names)}")
+            passive_abilities = {k: v for k, v in character.abilities.items() if v.get('type') == 'passive'}
+            if passive_abilities:
+                print("\n  👁️ PASSIVE / ALWAYS ACTIVE:")
+                for key, ab in passive_abilities.items():
+                    print(f"    {key}. {ab['name']:35} [PASSIVE — always active, no cost]")
             print("\n🎮  0.Describe  00.Divine Realm  0000.Skip(+15E)  00000.Back")
             if not character.volund_active and character.name in self.canon_pairings:
                 print("     000.Activate Völundr")
@@ -7329,24 +7372,35 @@ class RagnarokGame:
                 input("\nPress Enter to continue...")
                 return False
             elif choice == '0':
+                # Build describable dict: active abilities + passives
+                all_describable = dict(available)
+                for k, v in character.abilities.items():
+                    if v.get('type') == 'passive' and k not in all_describable:
+                        all_describable[k] = v
+
                 print("\n📖 SELECT ABILITY TO DESCRIBE:")
-                for key in sorted(available.keys(), key=lambda x: (int(m.group(1)), m.group(2)) if (m := __import__('re').match(r'^(\d+)(.*)', str(x))) else (999, x)):
-                    abil = available[key]
-                    print(f"  {key}. {abil['name']}")
+                for key in sorted(all_describable.keys(), key=lambda x: (int(m.group(1)), m.group(2)) if (m := __import__('re').match(r'^(\d+)(.*)', str(x))) else (999, x)):
+                    abil = all_describable[key]
+                    tag = " [PASSIVE]" if abil.get("type") == "passive" else ""
+                    print(f"  {key}. {abil['name']}{tag}")
                 print("\n  b. Back")
                 desc_choice = input("> ").strip()
-                if desc_choice in available:
-                    abil = available[desc_choice]
+                if desc_choice in all_describable:
+                    abil = all_describable[desc_choice]
+                    is_passive = abil.get("type") == "passive"
                     print("\n" + "─" * 80)
                     print(f"  {abil['name']}")
-                    stats = []
-                    if abil.get("cost"): stats.append(f"Cost: {abil['cost']}E")
-                    if abil.get("dmg") and abil["dmg"] != (0, 0):
-                        stats.append(f"Damage: {abil['dmg'][0]}-{abil['dmg'][1]}")
-                    if abil.get("hits", 1) > 1: stats.append(f"Hits: {abil['hits']}")
-                    if "uses_left" in abil: stats.append(f"Uses: {abil['uses_left']}/{abil['max_uses']}")
-                    if "views" in abil: stats.append(f"Seen: {abil['views']}x")
-                    if stats: print(f"  {'  |  '.join(stats)}")
+                    if is_passive:
+                        print(f"  [PASSIVE — always active, costs no energy]")
+                    else:
+                        stats = []
+                        if abil.get("cost"): stats.append(f"Cost: {abil['cost']}E")
+                        if abil.get("dmg") and abil["dmg"] != (0, 0):
+                            stats.append(f"Damage: {abil['dmg'][0]}-{abil['dmg'][1]}")
+                        if abil.get("hits", 1) > 1: stats.append(f"Hits: {abil['hits']}")
+                        if "uses_left" in abil: stats.append(f"Uses: {abil['uses_left']}/{abil['max_uses']}")
+                        if "views" in abil: stats.append(f"Seen: {abil['views']}x")
+                        if stats: print(f"  {'  |  '.join(stats)}")
                     print("─" * 80)
                     if "desc" in abil:
                         print_desc(abil['desc'])
