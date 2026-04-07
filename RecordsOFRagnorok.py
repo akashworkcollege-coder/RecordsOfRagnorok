@@ -855,6 +855,13 @@ class Character:
             mult *= 1.5
             buffs.append("🔥 BERSERK")
 
+        # WEAKEN: reduces outgoing damage by the status value
+        if self.has_status_effect(StatusEffect.WEAKEN):
+            weaken_val = self.get_status_effect_value(StatusEffect.WEAKEN)
+            mult *= weaken_val
+            pct = int((1.0 - weaken_val) * 100)
+            buffs.append(f"🔻 WEAKENED -{pct}%")
+
         return mult, buffs
 
     def apply_effect(self, effect, target=None, ability=None, **kwargs):
@@ -1396,7 +1403,7 @@ class Zeus(Character):
             self.footwork_active = True
             self.add_status_effect(StatusEffect.EVASION, 1, 0.4)
             self.add_status_effect(StatusEffect.FOOTWORK, 1)
-            return "👣 [ZEUS' FOOTWORK] Strange footwork with afterimages! 40% evasion next turn."
+            return "👣 [ZEUS' FOOTWORK] Strange footwork with afterimages! 40% evasion next turn. [TRANSFORMATION: Afterimages blur across the arena — Zeus appears to be in six places at once]"
         elif effect == "muscle_form":
             self.form = "Muscle"
             self.divine_mode = True
@@ -1511,7 +1518,7 @@ class Poseidon(Character):
         elif effect == "petrify":
             tgt = target if target else self
             tgt.add_status_effect(StatusEffect.SLOW, 2, 0.5)
-            return "🗿 [PETRIFY] Medusa's power turns the target's movements to stone! SLOWED for 2 turns."
+            return "🗿 [PETRIFY] Medusa's power turns the target's movements to stone! The opponent's limbs grow heavy — each step feels like wading through solid earth. SLOWED for 2 turns. [TRANSFORMATION: Medusa's divine gaze crystallises into the trident's tip, momentarily petrifying the target's muscles]"
         return ""
 
     def use_ability(self, ability_key):
@@ -1625,7 +1632,7 @@ class Heracles(Character):
         elif effect == "heal":
             heal_amount = 150
             self.heal(heal_amount)
-            return f"🍎 [APPLES OF HESPERIDES] Heracles heals for {heal_amount} HP!"
+            return f"🍎 [APPLES OF HESPERIDES] Heracles bites into a golden apple from the garden of the Hesperides — divine nectar floods through his body, closing wounds and restoring his enormous vitality! Healed {heal_amount} HP! [TRANSFORMATION: Golden divine energy flows through Heracles, sealing wounds like they were never there]"
         elif effect == "divine_protection":
             self.defending = True
             self.add_status_effect(StatusEffect.DEFEND, 1)
@@ -1675,6 +1682,14 @@ class Heracles(Character):
 # ============================================================================
 # SHIVA - God of Destruction (FIXED with proper damage return)
 # ============================================================================
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.cerberus_active = False
+        self.divine_mode = False
+        self.tattoo_progress = 0
+        self.labors_used = []
+
 
 class Shiva(Character):
     def __init__(self):
@@ -1843,11 +1858,11 @@ class Zerofuku(Character):
         if effect == "misery":
             self.misery_level = min(7, self.misery_level + 1)
             self.add_status_effect(StatusEffect.MISERY, 999, stacks=self.misery_level)
-            return f"🎋 [MISERY] Zerofuku channels accumulated misery! Misery Level: {self.misery_level}"
+            return f"🎋 [MISERY] Zerofuku channels the weight of all accumulated misfortune into his cleaver — the flesh-like protrusions writhe, the blade pulses with dark energy. Misery Level: {self.misery_level} [TRANSFORMATION: The axe drinks in suffering, growing more monstrous with each absorbed sorrow]"
         elif effect == "cleaver_heads":
             self.cleaver_heads = min(7, self.cleaver_heads + 1)
             self.add_status_effect(StatusEffect.CLEAVER_HEADS, 999, stacks=self.cleaver_heads)
-            return f"🎋 [CLEAVER HEADS] The Great Cleaver grows another head! Total heads: {self.cleaver_heads}"
+            return f"🎋 [CLEAVER HEADS] The Great Cleaver of Misery splits again — another head erupts from the blade's flesh with a sickening crack! Each new head seeks a different vital point. Total heads: {self.cleaver_heads} [TRANSFORMATION: The axe's flesh splits open as another blade-head tears free, multiplying the angles of destruction]"
         elif effect == "absorb":
             self.misery_level = min(7, self.misery_level + 1)
             self.cleaver_heads = min(7, 1 + self.misery_level)
@@ -1929,7 +1944,10 @@ class Hajun(Character):
         if effect == "possess":
             self.possession_active = True
             self.add_status_effect(StatusEffect.DARK_SOUL, 1)
-            return "👹 [POSSESSION] Hajun's demonic energy reaches out to possess the enemy! The target will be unable to act for 2 turns!"
+            if target:
+                result = self.use_possession(target)
+                return result if result else "👹 [POSSESSION] Hajun reaches out — but the target resists!"
+            return "👹 [POSSESSION] Hajun's demonic energy charges — select a target to possess!"
         return ""
 
     def use_possession(self, target):
@@ -2261,6 +2279,7 @@ class Apollo(Character):
             return "🧵 [THREADS OF LIGHT] Apollo weaves threads of sunlight into invisible snares! Enemy is slowed."
         elif effect == "bind":
             tgt = target if target else self
+            tgt.bound = True
             tgt.add_status_effect(StatusEffect.BIND, 1)
             return "🧵 [THREADS OF LIGHT: BIND] Light threads entangle the target completely!"
         elif effect == "lyre":
@@ -2738,7 +2757,9 @@ class Loki(Character):
         if clone_index < len(self.clones) and self.clones[clone_index]["active"]:
             clone = self.clones[clone_index]
             base_damage = random.randint(80, 120)
-            damage = int(base_damage * clone["damage_mult"])
+            # Apply Loki's damage multiplier so his buffs affect clone attacks
+            loki_mult, _ = self.get_damage_multiplier()
+            damage = int(base_damage * clone["damage_mult"] * loki_mult)
             damage = max(10, damage)
             target.take_damage(damage)
             label = "👤 Perfect Clone" if clone.get("perfect") else f"👥 Clone {clone_index + 1}"
@@ -3255,11 +3276,14 @@ class Odin(Character):
         # ── 18 Hymns ─────────────────────────────────────────────────────
         elif effect == "hymn_hel_vita":
             tgt = target if target else self
+            tgt.stunned = True
             tgt.add_status_effect(StatusEffect.STUN, 1)
             return "🔮 [6TH GALDER: HEL VÍTA] Odin lifts the opponent skyward — a divine shockwave HURLS them into the arena walls! STUN applied! [TRANSFORMATION: The target crashes against the boundary walls of the arena]"
 
         elif effect == "hymn_bind":
             tgt = target if target else self
+            tgt.bound = True
+            tgt.add_status_effect(StatusEffect.BIND, 1)
             tgt.add_status_effect(StatusEffect.SLOW, 1, 0.5)
             return "🔮 [1ST GALDER] Ljóðatal — rune-chains slow the target! (-50% action speed)"
 
@@ -3326,6 +3350,7 @@ class Odin(Character):
         elif effect == "hymn_death":
             tgt = target if target else self
             if random.random() < 0.20:
+                tgt.stunned = True
                 tgt.add_status_effect(StatusEffect.STUN, 2)
                 return (
                     "🔮 [15TH GALDER] Vafþrúðnismál — the Dagaz rune detonates! "
@@ -3389,7 +3414,7 @@ class Odin(Character):
             self.treasure_timers["draupnir"] = 3
             self.add_status_effect(StatusEffect.DRAUPNIR, 3)
             self.add_status_effect(StatusEffect.EMPOWER, 3, 1.3)
-            result = "💍 [MANIFEST DRAUPNIR] Draupnir manifested! The self-multiplying ring of Chaos!"
+            result = "💍 [MANIFEST DRAUPNIR] Draupnir tears free from Odin's flesh — the self-multiplying ring of Chaos splits into eight copies every ninth night, an engine of infinite abundance that Odin has turned into an engine of destruction. [TRANSFORMATION: The ring multiplies endlessly in mid-air, each copy a bladed weapon orbiting Odin]"
             if self._check_all_treasures():
                 result += " | 🌳 [YGGDRASIL AWAKENING] ALL FOUR TREASURES OF CALAMITY UNITED! THE WORLD TREE STIRS!"
             return result
@@ -3398,7 +3423,7 @@ class Odin(Character):
             self.treasure_timers["egil"] = 3
             self.add_status_effect(StatusEffect.EGIL, 3)
             self.add_status_effect(StatusEffect.SHIELD, 3, 0.5)
-            result = "⛑️ [MANIFEST EGIL] Egil manifested! The helmet of Satan focuses dark energy!"
+            result = "⛑️ [MANIFEST EGIL] The Helmet of Egil materialises from Odin's brow — the helmet of the Adversary himself, forged to concentrate dark energy into a single point of absolute focus. [TRANSFORMATION: Odin's face is consumed by shadow as the helmet takes shape — only his one remaining eye glows through the darkness]"
             if self._check_all_treasures():
                 result += " | 🌳 [YGGDRASIL AWAKENING] ALL FOUR TREASURES OF CALAMITY UNITED! THE WORLD TREE STIRS!"
             return result
@@ -3489,10 +3514,9 @@ class Odin(Character):
             print(f"  ⏳ Odin's {t.title()} fades.")
         for t in list(self.treasure_timers):
             self.treasure_timers[t] -= 1
-        was_awakened = self.yggdrasil_awakening
-        self.yggdrasil_awakening = len(self.active_treasures) == 4
-        if was_awakened and not self.yggdrasil_awakening:
-            print("  🌳 [YGGDRASIL AWAKENING ENDS] The Four Treasures are no longer all united.")
+        # Yggdrasil Awakening is PERMANENT once triggered — treasures may expire but awakening holds
+        if not self.yggdrasil_awakening and len(self.active_treasures) == 4:
+            self.yggdrasil_awakening = True
 
     # ------------------------------------------------------------------
     # get_damage_multiplier
@@ -3709,7 +3733,7 @@ class KojiroSasaki(Character):
             if self.scan_progress >= 5:
                 self.manju_muso = True
                 self.add_status_effect(StatusEffect.MANJU_MUSO, 999)
-            return f"🔍 [SCAN] Scan {self.scan_progress}: {evasion * 100}% evasion, {crit * 100}% crit. [TRANSFORMATION: {self.simulations_complete} simulations complete - every possible move calculated]"
+            return f"🔍 [SCAN] Scan {self.scan_progress}: Kojiro's eyes trace every micro-movement — the shift of weight, the twitch of a muscle before a strike. {int(evasion * 100)}% evasion, {int(crit * 100)}% crit. {self.simulations_complete:,} simulations complete. [TRANSFORMATION: Thousands of possible futures flicker through Kojiro's mind — he has already seen every way this fight ends]"
         return ""
 
     def image_training_bonus(self):
@@ -3970,7 +3994,7 @@ class JackTheRipper(Character):
         elif effect == "umbrella_shield":
             self.defending = True
             self.add_status_effect(StatusEffect.DEFEND, 1)
-            return "☂️ [UMBRELLA SHIELD] Jack's umbrella deflects incoming attacks!"
+            return "☂️ [UMBRELLA SHIELD] Jack snaps his umbrella open with a flick — the Magic Gloves surge through every spoke, transforming ordinary Victorian fabric and steel into a divine barrier capable of deflecting the strikes of gods. A gentleman's weapon, made divine. [TRANSFORMATION: The humble umbrella becomes an impenetrable divine shield — what could deflect a godly strike becomes one]"
         elif effect == "mist":
             self.add_status_effect(StatusEffect.CAMOUFLAGE, 2)
             self.add_status_effect(StatusEffect.EVASION, 2, 0.5)
@@ -3984,7 +4008,7 @@ class JackTheRipper(Character):
             return "🫀 [INTERNAL ORGAN SHIFT] Jack manually shifts his organs! Damage reduced by 50% for 3 turns!"
         elif effect == "rondo":
             self.add_status_effect(StatusEffect.EMPOWER, 1, 1.5)
-            return "🎪 [RONDO OF BLESSING] Jack's cloak becomes a divine blade, cutting the building!"
+            return "🎪 [RONDO OF BLESSING] Jack spreads his cloak wide in a sweeping arc — the Magic Gloves react to every thread of the garment, transforming the ordinary cloth into a divine bladed weapon that slices through an entire building. The structure groans, then collapses ONTO the enemy in a cascade of divine destruction. [TRANSFORMATION: Jack's cloak becomes a razor of divine light — with one graceful sweep, an entire building folds down like paper]"
         return ""
 
     def take_damage(self, dmg, ignore_defense=False):
@@ -4164,16 +4188,18 @@ class RaidenTameemon(Character):
             return "❌ Muscle release already used!"
         elif effect == "stun":
             tgt = target if target else self
+            tgt.stunned = True
             tgt.add_status_effect(StatusEffect.STUN, 2)
-            return "🙏 [JIZO'S EMBRACE] The headbutt connects — target is STUNNED for 2 turns!"
+            return "🙏 [JIZO'S EMBRACE] Raiden seizes the opponent's head with both hands and drives his own forehead into theirs with the full weight of Japan's greatest sumo wrestler behind it! The impact rings out like a temple bell. Target STUNNED for 2 turns! [TRANSFORMATION: Two skulls collide with divine force — the arena floor cracks beneath Raiden's feet from the sheer downward weight]"
         elif effect == "bind":
             tgt = target if target else self
+            tgt.bound = True
             tgt.add_status_effect(StatusEffect.BIND, 1)
-            return "🐗 [WILD BOAR] Raiden's vice-grip catches the target — they are BOUND!"
+            return "🐗 [WILD BOAR] Raiden locks onto a limb and squeezes with the full force of his supernatural muscles — bones creak, joints grind. No amount of divine power can wrench free of this iron grip. Target BOUND! [TRANSFORMATION: Raiden's muscles bulge to impossible size as he crushes the limb — the sound of grinding bone echoes through the arena]"
         elif effect == "defense":
             self.defending = True
             self.add_status_effect(StatusEffect.DEFEND, 1)
-            return "⛰️ [MIYAMA] Raiden creates an impenetrable wall of flesh!"
+            return "⛰️ [MIYAMA] Raiden plants both feet and raises his arms — muscles swelling, locking into place like boulders. No force will move him. The Mountain Deeps stance: an immovable wall of flesh that has turned aside divine weapons. [TRANSFORMATION: Raiden's body becomes stone-still — every muscle fibre locked, every joint braced, an unshakeable fortress of human will]"
         return ""
 
     def reset_volund(self):
@@ -4271,6 +4297,7 @@ class Buddha(Character):
             emotions = list(self.weapons.keys())
             self.current_emotion = random.choice(emotions)
             weapon = self.weapons[self.current_emotion]
+            self.current_weapon = weapon['name']
 
             # Update the six_realms_strike ability to reflect current weapon
             self.abilities['4'] = {
@@ -4359,6 +4386,10 @@ class Buddha(Character):
             self.remove_status_effect(StatusEffect.FUTURE_SIGHT)
             self.add_status_effect(StatusEffect.DARK_SOUL, 999)
             return "⚠️ [DARK SOUL] Buddha's Future Sight FAILS — the enemy's soul has no light! The future is dark. [TRANSFORMATION: The future becomes opaque — Hajun's dark soul cannot be read by enlightenment]"
+        # Light soul: future sight activates (remove dark soul if it lingered from a previous target)
+        self.remove_status_effect(StatusEffect.DARK_SOUL)
+        self.future_sight_active = True
+        self.add_status_effect(StatusEffect.FUTURE_SIGHT, 3)
         return "✨ [SOUL LIGHT] The enemy's soul carries light. Future Sight reads them clearly."
 
     def gain_great_nirvana_sword(self):
@@ -4527,7 +4558,7 @@ class QinShiHuang(Character):
 
     def take_damage(self, dmg, ignore_defense=False):
         if self.armor_form and not ignore_defense:
-            reduced = int(dmg * 0.75)  # 25% damage reduction while armor is active
+            reduced = int(dmg * 0.50)  # 50% damage reduction while armor is active
             result = super().take_damage(reduced, ignore_defense)
             return result
         return super().take_damage(dmg, ignore_defense)
@@ -4541,8 +4572,11 @@ class QinShiHuang(Character):
             self.add_status_effect(StatusEffect.CHI_FLOW, 999)
             return "👁️ [STAR EYES] Qin removes blindfold - can see Chi flow! Armor form released. [TRANSFORMATION: His eyes reveal the flow of Qi in all living things - he can see the cruxes of power]"
         elif effect == "drifting_tortoise":
-            self.add_status_effect(StatusEffect.CHI_CRUX, 1)
-            return "🐢 [DRIFTING TORTOISE] Air bullet fired! Enemy technique weakened! [TRANSFORMATION: The crux of Chi has been struck - their technique falters]"
+            if target:
+                target.add_status_effect(StatusEffect.WEAKEN, 2, 0.15)
+                target.add_status_effect(StatusEffect.SLOW, 1)
+            self.add_status_effect(StatusEffect.CHI_CRUX, 1)  # visual
+            return "🐢 [DRIFTING TORTOISE] Qin draws a breath — then releases a concentrated burst of compressed air from his mouth, invisible and silent, aimed precisely at the crux of Chi flowing through the enemy's technique. Their power source has been disrupted. [TRANSFORMATION: The crux of Chi shatters — the enemy's next technique loses its cohesion, power bleeding out of every movement]"
         elif effect == "phoenix_embrace":
             self.defending = True
             self.phoenix_active = True
@@ -4701,7 +4735,7 @@ class NikolaTesla(Character):
                 self.teleport_charges -= 1
                 self.add_status_effect(StatusEffect.TESLA_WARP, 1)
                 self.add_status_effect(StatusEffect.EVASION, 1, 0.9)
-                return f"⚡ [TESLA WARP] Tesla Warp! {self.teleport_charges} charges remaining [TRANSFORMATION: The Super Tesla Coil glows brightly as Tesla instantaneously repositions through space]"
+                return f"⚡ [TESLA WARP] Tesla synchronises with the Super Tesla Particles in the Gematria Zone — space collapses between two points and he BLINKS to a new position in an instant. {self.teleport_charges} charges remaining. [TRANSFORMATION: The Super Tesla Coil ignites — Tesla dissolves into a bolt of electricity and reforms at the target location, immune to attack for one heartbeat]"
             return "❌ Cannot teleport! [Gematria Zone must be active and charges remaining]"
         elif effect == "tesla_step":
             self.tesla_step = True
@@ -4828,7 +4862,7 @@ class Leonidas(Character):
             self.add_status_effect(StatusEffect.PHALANX, 1)
             self.add_status_effect(StatusEffect.DEFEND, 1)
             self.add_status_effect(StatusEffect.SHIELD, 1, 0.5)
-            return "🛡️ [PHALANX] Leonidas raises his shield — the Spartan phalanx holds! 50% damage reduction this turn."
+            return "🛡️ [PHALANX] THIS IS SPARTA! Leonidas drops into the low Spartan stance — shield braced, feet planted, the entire weight of 300 years of Spartan discipline behind that bronze aspis. 50% damage reduction this turn. [TRANSFORMATION: The Shield of Sparta becomes a wall — behind it stands not one man but the spirit of every Spartan who died at Thermopylae]"
         elif effect == "shield_form":
             self.shield_form = "base"
             self.add_status_effect(StatusEffect.SHIELD_FORM, 3)
@@ -4973,7 +5007,7 @@ class SojiOkita(Character):
                 self.add_status_effect(StatusEffect.DEMON_CHILD, 5)
                 self.add_status_effect(StatusEffect.EMPOWER, 5, 1.5)
                 self.add_status_effect(StatusEffect.ILLNESS, 999, stacks=self.illness_effect)  # Managed manually
-                return f"👹 [DEMON CHILD] Demon Child awakened! Illness: {self.illness_effect}% [TRANSFORMATION: Blood pumps faster, muscles awaken - but the illness that killed him stirs as well]"
+                return f"👹 [DEMON CHILD] DEMON CHILD AWAKENED! Soji's heart pumps three times faster — muscle cells tear apart and rebuild stronger in real time. His eyes glow red, his speed triples. But the tuberculosis that claimed his life in the outside world stirs in his chest. Illness: {self.illness_effect}% [TRANSFORMATION: The demon that slumbers in every consumptive soul tears through its chains — Okita's body becomes a weapon that is also destroying itself]"
             return "❌ Demon Child cannot be awakened again!"
         elif effect == "demon_release":
             if self.demon_child_active and self.demon_available:
@@ -5117,7 +5151,7 @@ class SimoHayha(Character):
             self.organ_sacrifice += 1
             damage_taken = 30
             print(f"  💥 [UKONVASARA] Simo sacrifices his pancreas — the Hammer of Ukko is forged!")
-            self.take_damage(damage_taken)
+            self.hp = max(0, self.hp - damage_taken)  # bypass evasion for self-damage
             self.add_status_effect(StatusEffect.ORGAN_SAC, 1, stacks=len(self.organs_used))
             return "❄️ [UKONVASARA] Pancreas becomes the Hammer of Ukko — the fastest, most precise bullet! Simo's 543rd kill. [TRANSFORMATION: Pancreas becomes the Hammer of Ukko — rotating headshot that surpasses all reaction speed]"
         elif effect == "organ":
@@ -5139,7 +5173,7 @@ class SimoHayha(Character):
             self.organ_sacrifice += 1
             damage_taken = 30
             print(f"  💥 [ORGAN SACRIFICE] Simo takes {damage_taken} damage from sacrificing his {organ}!")
-            self.take_damage(damage_taken)
+            self.hp = max(0, self.hp - damage_taken)  # bypass evasion for self-damage
             self.add_status_effect(StatusEffect.ORGAN_SAC, 1, stacks=len(self.organs_used))
             organs_left = len(self.organs) - len(self.organs_used)
             return f"💀 [ISÄNMAALLE] {organ} becomes a divine bullet! Organs left: {organs_left}"
@@ -5163,6 +5197,13 @@ class SimoHayha(Character):
 # ============================================================================
 # SAKATA KINTOKI - Golden Hero (FIXED with double strike and Rune requirement)
 # ============================================================================
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.organs_used = set()
+        self.organ_sacrifice = False
+        self.camouflage_active = False
+
 
 class SakataKintoki(Character):
     def __init__(self):
@@ -5241,7 +5282,7 @@ class SakataKintoki(Character):
             return "❌ [RUNE NEEDED] Need to activate Rune of Eirin first!"
         elif effect == "empower":
             self.add_status_effect(StatusEffect.EMPOWER, 1, 1.3)
-            return "✨ [AURA STRIKE] Kintoki shapes the Rune of Eirin's golden aura into a burst of transmuted force!"
+            return "✨ [AURA STRIKE] Kintoki channels the Rune of Eirin — the Dagaz rune blazes on his palm as golden light floods through the axe, transmuted from pure spiritual energy into devastating physical force! [TRANSFORMATION: The Great Light Goddess Eirin's ancient power flows through Kintoki's arm — every cell in his body singing with golden light before it is released as a single devastating strike]"
         return ""
 
     def update_status_effects(self):
@@ -5250,6 +5291,11 @@ class SakataKintoki(Character):
             self.rune_cooldown -= 1
             if self.rune_cooldown == 0:
                 print(f"  ⚡ Rune of Eirin is ready to use again!")
+
+    def reset_volund(self):
+        super().reset_volund()
+        self.rune_of_eirin_active = False
+        self.rune_cooldown = 0
 
     def ensure_divine_technique(self):
         if not self.divine_technique and self.volund_active:
@@ -7017,12 +7063,17 @@ class RagnarokGame:
 
         if enemy.stunned:
             print(f"⚡ [STUNNED] {enemy.name} is stunned!")
+            # Clear the flag; the status effect will expire on its own
             enemy.stunned = False
+            if enemy.has_status_effect(StatusEffect.STUN):
+                enemy.remove_status_effect(StatusEffect.STUN)
             return
 
         if enemy.bound:
-            print(f"⚪ [BOUND] {enemy.name} is bound!")
+            print(f"⚪ [BOUND] {enemy.name} is bound and cannot act!")
             enemy.bound = False
+            if enemy.has_status_effect(StatusEffect.BIND):
+                enemy.remove_status_effect(StatusEffect.BIND)
             return
 
         if hasattr(enemy, 'exhausted') and enemy.exhausted:
@@ -7040,7 +7091,11 @@ class RagnarokGame:
             print(f"     Takes {possession_damage} damage from demonic corruption!")
             return
 
-        enemy.energy = min(enemy.max_energy, enemy.energy + 15)
+        # SLOW halves energy recovery
+        energy_gain = 7 if enemy.has_status_effect(StatusEffect.SLOW) else 15
+        enemy.energy = min(enemy.max_energy, enemy.energy + energy_gain)
+        if energy_gain < 15:
+            print(f"  🐢 [SLOW] {enemy.name} recovers only {energy_gain}E this turn!")
 
         adam = None
         for char in party:
@@ -7052,10 +7107,10 @@ class RagnarokGame:
         for char in party:
             if char.name == "Buddha" and char.is_alive():
                 buddha = char
-                if hasattr(enemy, 'soul_dark') and enemy.soul_dark:
-                    if buddha.future_sight_active:
-                        result = buddha.check_soul_light(enemy)
-                        print_ability_result(result)
+                # Always check soul light — dark soul blocks, light soul activates future sight
+                result = buddha.check_soul_light(enemy)
+                if result and ("DARK SOUL" in result or not buddha.future_sight_active):
+                    print_ability_result(result)
                 break
 
         # Find Loki for clone targeting
@@ -7126,12 +7181,11 @@ class RagnarokGame:
                                 print(f"  {counter_result}")
                                 dmg = 0
 
+                        # BLIND: 30% miss chance for blinded attacker
+                        if enemy.has_status_effect(StatusEffect.BLIND) and random.random() < 0.30:
+                            print(f"  👁️ [BLIND] {enemy.name} swings wildly and misses!")
                         # Menacing Aura passive: 10% miss chance when attacking Thor
-                        has_menacing = any(
-                            'Menacing' in ab.get('name', '')
-                            for ab in getattr(t, 'abilities', {}).values()
-                        )
-                        if has_menacing and random.random() < 0.10:
+                        elif any('Menacing' in ab.get('name','') for ab in getattr(t,'abilities',{}).values()) and random.random() < 0.10:
                             print(f"  ⚡ [MENACING AURA] {enemy.name} flinches before Thor's divine presence! Attack misses!")
                         else:
                             t.take_damage(dmg, ignore_defense=ignore_defense)
@@ -7189,6 +7243,18 @@ class RagnarokGame:
 
     def use_ability(self, character):
         while True:
+            # STUN: stunned player loses their turn
+            if character.stunned:
+                print(f"\n⚡ [STUNNED] {character.name} is stunned and cannot act this turn!")
+                character.stunned = False
+                return True
+
+            # BIND: bound player loses their turn
+            if character.bound:
+                print(f"\n🔗 [BOUND] {character.name} is bound and cannot move this turn!")
+                character.bound = False
+                return True
+
             # FIXED: Exhausted check applies to ALL characters (not just Beelzebub)
             if hasattr(character, 'exhausted') and character.exhausted:
                 if character.name == "Beelzebub" and hasattr(character, 'can_use_ability'):
@@ -7437,6 +7503,19 @@ class RagnarokGame:
 
                     print(f"{character.name} unleashes DIVINE TECHNIQUE for {dmg} damage!")
 
+                    # Apply any special effect the DT has
+                    dt_effect = character.divine_technique.get("effect")
+                    if dt_effect and hasattr(character, 'apply_effect'):
+                        dt_result = character.apply_effect(dt_effect, target=target, ability=character.divine_technique)
+                        if dt_result:
+                            print_ability_result(dt_result)
+
+                    # Lilith mark check after DT hit
+                    if hasattr(target, 'check_lilith_mark') and target.hp <= 0:
+                        lm_result = target.check_lilith_mark()
+                        if lm_result:
+                            print_ability_result(lm_result)
+
                 return True
             elif choice in available:
                 ability = available[choice]
@@ -7483,6 +7562,12 @@ class RagnarokGame:
                                 f"{character.name} uses {ability['name']} for {total_dmg} total damage across {hits} hits!")
                         else:
                             ignore_defense = ability.get("blockable", True) == False
+
+                            # BLIND: 30% chance to miss completely
+                            if character.has_status_effect(StatusEffect.BLIND):
+                                if random.random() < 0.30:
+                                    print(f"  👁️ [BLIND] {character.name} swings wildly and misses!")
+                                    return True
 
                             if ability.get("armor_break"):
                                 print("⚔️ Armor break!")
@@ -7556,7 +7641,7 @@ class RagnarokGame:
                         if hasattr(character, 'apply_effect'):
                             # FIXED: Some buff/utility effects debuff the enemy via tgt-routing.
                             # Without target=, tgt defaults to self. Pass a target for those effects.
-                            _DEBUFF_EFFECTS = {"threads", "hymn_illusion"}
+                            _DEBUFF_EFFECTS = {"threads", "hymn_illusion", "possess", "drifting_tortoise", "bind", "petrify"}
                             _tgt = self.select_target() if ability["effect"] in _DEBUFF_EFFECTS else None
                             result = character.apply_effect(ability["effect"], target=_tgt, ability=ability)
                             if result:
@@ -7575,13 +7660,7 @@ class RagnarokGame:
                             target.take_damage(dmg)
                             print(f"  {ability['name']} deals {dmg} damage!")
 
-                    # Handle Hajun's possession in utility branch
-                    if character.name == "Hajun" and ability.get("effect") == "possess":
-                        target = self.select_target()
-                        if target:
-                            result = character.use_possession(target)
-                            if result:
-                                print_ability_result(result)
+                    # Hajun possess: handled via _DEBUFF_EFFECTS routing above (target passed to apply_effect)
 
                 return True
             else:
@@ -7690,7 +7769,11 @@ class RagnarokGame:
 
             for char in current_party:
                 if char.is_alive():
-                    char.energy = min(char.max_energy, char.energy + 20)
+                    # SLOW halves energy recovery
+                    energy_gain = 10 if char.has_status_effect(StatusEffect.SLOW) else 20
+                    char.energy = min(char.max_energy, char.energy + energy_gain)
+                    if energy_gain < 20:
+                        print(f"  🐢 [SLOW] {char.name} recovers only {energy_gain}E this turn!")
                     action = False
                     while not action:
                         self.display_health_bars(current_party, current_enemies)
@@ -7783,10 +7866,11 @@ class RagnarokGame:
                     if c.divine_timer <= 0:
                         c.divine_mode = False
                         print(f"  ⏳ {c.name}'s divine mode fades.")
-            if c.stunned and random.random() < 0.3:
+            # Stun/bind flags sync with status effects — expire with them
+            if c.stunned and not c.has_status_effect(StatusEffect.STUN):
                 c.stunned = False
                 print(f"  ⚡ {c.name} recovers from stun!")
-            if c.bound and random.random() < 0.3:
+            if c.bound and not c.has_status_effect(StatusEffect.BIND):
                 c.bound = False
                 print(f"  🔗 {c.name} breaks free from binds!")
 
