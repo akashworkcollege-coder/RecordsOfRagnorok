@@ -746,7 +746,10 @@ class Character:
                 return 0
 
         # Check for future sight prediction (not evasion)
-        if self.has_status_effect(StatusEffect.FUTURE_SIGHT) and not self.possessed:
+        # Check both status effect AND flag (future_sight_active set by check_soul_light)
+        _has_future_sight = (self.has_status_effect(StatusEffect.FUTURE_SIGHT)
+                             or getattr(self, 'future_sight_active', False))
+        if _has_future_sight and not self.possessed:
             # Future sight allows predicting and partially dodging
             if random.random() < 0.3:  # 30% chance to predict and reduce damage
                 dmg = int(dmg * 0.5)
@@ -761,7 +764,7 @@ class Character:
             dmg = int(dmg * 0.5)
             print(f"  🟢 {self.name}'s Endurance Realm reduces damage!")
 
-        if self.has_status_effect(StatusEffect.SHIELD) and not self.possessed:
+        if self.has_status_effect(StatusEffect.SHIELD) and not self.possessed and not ignore_defense:
             reduction = self.get_status_effect_value(StatusEffect.SHIELD)
             dmg = int(dmg * reduction)
             print(f"  🔮 Shield reduces damage by {int((1 - reduction) * 100)}%!")
@@ -1295,6 +1298,8 @@ class Thor(Character):
 
     def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "remove_gloves":
+            if not self.járngreipr_active:
+                return "🧤 [JÁRNGREIPR] Thor's gloves are already off — Mjölnir is already unleashed!"
             self.járngreipr_active = False
             self.gloves_damage_timer = 5
             self.take_damage(20)
@@ -1624,6 +1629,8 @@ class Heracles(Character):
 
     def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "cerberus":
+            if self.cerberus_active:
+                return "🐕 [CERBERUS] Heracles has already fused with Cerberus — the three-headed guardian is already within him!"
             self.cerberus_active = True
             self.divine_mode = True
             self.divine_timer = 5
@@ -1646,6 +1653,8 @@ class Heracles(Character):
 
     def use_labor(self, labor_num):
         if labor_num == 11:
+            if self.hp >= self.max_hp:
+                return "🍎 [APPLES OF HESPERIDES] Heracles reaches for the golden apple — but he's already at full health! The fruit remains uneaten. (Energy wasted)"
             self.labors_used += 1
             heal_amount = 150
             self.heal(heal_amount)
@@ -3439,6 +3448,8 @@ class Odin(Character):
 
         # ── Battle Form ──────────────────────────────────────────────────
         elif effect == "battle_form":
+            if self.form == "Young":
+                return "👤 [BATTLE FORM] Odin's battle form is already active — the Supreme God has already shed his aged disguise!"
             self.form = "Young"
             self.divine_mode = True
             self.divine_timer = 5
@@ -3617,6 +3628,8 @@ class LuBu(Character):
 
     def apply_effect(self, effect, target=None, ability=None, **kwargs):
         if effect == "break_legs":
+            if self.legs_broken:
+                return "🦯 [BROKEN LEGS] Lü Bu's legs are already shattered — he already fights on broken bones!"
             self.legs_broken = True
             self.red_hare_active = True
             self.add_status_effect(StatusEffect.BERSERK, 3)
@@ -4004,6 +4017,9 @@ class JackTheRipper(Character):
             self.add_status_effect(StatusEffect.EVASION, 1, 0.7)
             return "🦯 [GRAPPLING HOOK] Jack swings away to safety! 70% evasion next turn!"
         elif effect == "organ_shift_manual":
+            if not self.organs_can_shift:
+                return "🫀 [ORGAN SHIFT] Jack's organs have already been rearranged — there's nothing left to shift!"
+            self.organs_can_shift = False
             self.add_status_effect(StatusEffect.ORGAN_SHIFT, 3, 0.5)
             return "🫀 [INTERNAL ORGAN SHIFT] Jack manually shifts his organs! Damage reduced by 50% for 3 turns!"
         elif effect == "rondo":
