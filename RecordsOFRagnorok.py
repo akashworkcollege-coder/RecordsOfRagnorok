@@ -1755,7 +1755,7 @@ class Shiva(Character):
             self.divine_mode = True
             self.divine_timer = 5
             self.add_status_effect(StatusEffect.KARMA, 5)
-            self.add_status_effect(StatusEffect.BURN, 5)
+            self.add_status_effect(StatusEffect.BURN, 5, 30)  # 30 HP/turn — blue flames devour her
             self.add_status_effect(StatusEffect.EMPOWER, 5, 2.0)
             return "💓 [TANDAVA KARMA] SHIVA'S HEART ACCELERATES! Blue flames consume his body - massive power boost but he slowly burns! [TRANSFORMATION: Blue flames consume his body - massive power boost but he slowly burns]"
         elif effect == "hidden_treasure":
@@ -3316,9 +3316,12 @@ class Odin(Character):
         elif effect == "hymn_frost":
             tgt = target if target else self
             tgt.add_status_effect(StatusEffect.FROST, 2)
+            tgt.add_status_effect(StatusEffect.SLOW, 2, 0.5)
+            energy_drained = min(20, tgt.energy)
+            tgt.energy = max(0, tgt.energy - 20)
             return (
-                "🔮 [7TH GALDER] Niflheimr — primordial ice descends! "
-                "FROST for 2 turns + enemy loses 20 energy."
+                f"🔮 [7TH GALDER] Niflheimr — primordial ice descends! "
+                f"FROST + SLOW for 2 turns. {tgt.name} loses {energy_drained} energy."
             )
 
         elif effect == "hymn_knowledge":
@@ -3646,6 +3649,16 @@ class LuBu(Character):
             buffs.append("🦯 BROKEN LEGS")
 
         return mult, buffs
+
+    def take_damage(self, dmg, ignore_defense=False):
+        # Red Hare: broken-legged desperation grants 20% evasion
+        if self.red_hare_active and not ignore_defense:
+            import random as _r
+            if _r.random() < 0.20:
+                print(f"  🐴 [RED HARE] Lü Bu's desperate speed carries him clear!")
+                return 0
+        return super().take_damage(dmg, ignore_defense)
+
 
     def reset_volund(self):
         super().reset_volund()
@@ -7107,11 +7120,16 @@ class RagnarokGame:
             print(f"     Takes {possession_damage} damage from demonic corruption!")
             return
 
-        # SLOW halves energy recovery
-        energy_gain = 7 if enemy.has_status_effect(StatusEffect.SLOW) else 15
-        enemy.energy = min(enemy.max_energy, enemy.energy + energy_gain)
-        if energy_gain < 15:
+        # SLOW halves / HASTE boosts energy recovery
+        if enemy.has_status_effect(StatusEffect.SLOW):
+            energy_gain = 7
             print(f"  🐢 [SLOW] {enemy.name} recovers only {energy_gain}E this turn!")
+        elif enemy.has_status_effect(StatusEffect.HASTE):
+            energy_gain = 25
+            print(f"  ⚡ [HASTE] {enemy.name} surges — recovers {energy_gain}E this turn!")
+        else:
+            energy_gain = 15
+        enemy.energy = min(enemy.max_energy, enemy.energy + energy_gain)
 
         adam = None
         for char in party:
@@ -7191,11 +7209,30 @@ class RagnarokGame:
                             t.bound = True
                             t.add_status_effect(StatusEffect.BIND, 1)
 
+                        # Qin counter-attack
                         if t.name == "Qin Shi Huang" and hasattr(t, 'counter_ready') and t.counter_ready:
                             counter_result = t.counter_attack(dmg, enemy)
                             if counter_result:
                                 print(f"  {counter_result}")
                                 dmg = 0
+
+                        # Susanoo Shinra Yaoyorozu — parry with 8 million gods
+                        elif hasattr(t, 'shinra_active') and t.shinra_active:
+                            parry_dmg = int(dmg * 0.5)
+                            enemy.take_damage(parry_dmg, ignore_defense=True)
+                            t.shinra_active = False
+                            t.remove_status_effect(StatusEffect.COUNTER_READY)
+                            print(f"  👁️ [SHINRA YAOYOROZU] Eight million gods intercept the strike! {enemy.name} takes {parry_dmg} reflected damage!")
+                            dmg = int(dmg * 0.3)  # partial damage still gets through
+
+                        # Apollo Enlightened Counter — future sight anticipates the blow
+                        elif t.name == "Apollo" and hasattr(t, 'counter_ready') and t.counter_ready and t.has_status_effect(StatusEffect.COUNTER_READY):
+                            counter_dmg = int(dmg * 0.6)
+                            enemy.take_damage(counter_dmg, ignore_defense=True)
+                            t.counter_ready = False
+                            t.remove_status_effect(StatusEffect.COUNTER_READY)
+                            print(f"  🎯 [ENLIGHTENED COUNTER] Apollo's divine foresight turns the attack back! {enemy.name} takes {counter_dmg} counter damage!")
+                            dmg = int(dmg * 0.4)  # attack greatly reduced
 
                         # BLIND: 30% miss chance for blinded attacker
                         if enemy.has_status_effect(StatusEffect.BLIND) and random.random() < 0.30:
@@ -7576,6 +7613,11 @@ class RagnarokGame:
                                 total_dmg += hit_dmg
                             print(
                                 f"{character.name} uses {ability['name']} for {total_dmg} total damage across {hits} hits!")
+                            # Call apply_effect after all hits (e.g. Shiva hidden_treasure, Kintoki flash)
+                            if "effect" in ability and ability["effect"] not in ["bind","hymn_wolves"]:
+                                if hasattr(character, 'apply_effect'):
+                                    _mh_r = character.apply_effect(ability["effect"], target=target, ability=ability)
+                                    if _mh_r: print_ability_result(_mh_r)
                         else:
                             ignore_defense = ability.get("blockable", True) == False
 
@@ -7616,7 +7658,8 @@ class RagnarokGame:
                             if hasattr(character, 'post_damage_hook') and "effect" in ability:
                                 character.post_damage_hook(dmg, ability["effect"])
 
-                        if "effect" in ability and ability["effect"] not in ["bind", "hymn_wolves"]:
+                        # Only call apply_effect for single-hit; multi-hit already called it above
+                        if hits <= 1 and "effect" in ability and ability["effect"] not in ["bind", "hymn_wolves"]:
                             if hasattr(character, 'apply_effect'):
                                 result = character.apply_effect(ability["effect"], target=target, ability=ability)
                                 if result:
@@ -7785,11 +7828,16 @@ class RagnarokGame:
 
             for char in current_party:
                 if char.is_alive():
-                    # SLOW halves energy recovery
-                    energy_gain = 10 if char.has_status_effect(StatusEffect.SLOW) else 20
-                    char.energy = min(char.max_energy, char.energy + energy_gain)
-                    if energy_gain < 20:
+                    # SLOW halves / HASTE boosts energy recovery
+                    if char.has_status_effect(StatusEffect.SLOW):
+                        energy_gain = 10
                         print(f"  🐢 [SLOW] {char.name} recovers only {energy_gain}E this turn!")
+                    elif char.has_status_effect(StatusEffect.HASTE):
+                        energy_gain = 35
+                        print(f"  ⚡ [HASTE] {char.name} surges with speed — recovers {energy_gain}E this turn!")
+                    else:
+                        energy_gain = 20
+                    char.energy = min(char.max_energy, char.energy + energy_gain)
                     action = False
                     while not action:
                         self.display_health_bars(current_party, current_enemies)
