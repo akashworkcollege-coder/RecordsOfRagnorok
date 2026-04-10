@@ -1280,7 +1280,7 @@ class Thor(Character):
                   "desc": "⚡ [THOR'S HAMMER] Thor winds up Mjölnir and hurls it with tremendous force. Mjölnir becomes a projectile of pure thunder, returning to Thor's hand after striking its target like a boomerang of lightning. [TRANSFORMATION: Mjölnir becomes a projectile of pure thunder, returning to Thor's hand after striking]"},
             '3': {"name": "🧤 Remove Járngreipr", "cost": 30, "dmg": (0, 0), "type": "buff",
                   "effect": "remove_gloves",
-                  "desc": "🧤 [JÁRNGREIPR REMOVAL] Thor removes his iron gauntlets Járngreipr. Without the gauntlets, Mjölnir's true power awakens, though Thor's grip becomes dangerously hot, causing him damage. The gloves were actually protecting Mjölnir from being crushed by Thor's grip. [TRANSFORMATION: Without the gauntlets, Mjölnir's true power awakens, though Thor's grip becomes dangerously hot]"},
+                  "desc": "🧤 [JÁRNGREIPR REMOVAL] Thor removes his iron gauntlets Járngreipr. Without the gauntlets, Mjölnir's true power awakens, though Thor's grip becomes dangerously hot, causing him damage. The gloves were actually protecting Mjölnir from being crushed by Thor's grip. [TRANSFORMATION: Without the gauntlets, Mjölnir's true power awakens, though Thor's grip becomes dangerously hot]", "uses_left": 1, "max_uses": 1},
             '4': {"name": "⚡ Awakened Mjolnir", "cost": 70, "dmg": (320, 400), "type": "damage", "divine": True,
                   "blockable": True,
                   "desc": "⚡ [AWAKENED MJÖLNIR] Thor awakens Mjölnir's true power. The hammer crackles with divine lightning, veins of power pulsing across its surface as it becomes so hot the orichalcum surrounding it melts like lava. [TRANSFORMATION: The hammer crackles with divine lightning, veins of power pulsing across its surface]"},
@@ -1619,7 +1619,7 @@ class Heracles(Character):
                    "effect": "heal",
                    "desc": "🍎 [APPLES OF HESPERIDES] Heracles reaches for the golden apples of immortality. Divine essence restores health, the fruit of the gods. [TRANSFORMATION: Divine essence restores health]"},
             '12': {"name": "🐕 12th Labor: Cerberus", "cost": 100, "dmg": (400, 500), "type": "damage", "labor": 12,
-                   "effect": "cerberus",
+                   "effect": "cerberus", "uses_left": 1, "max_uses": 1,
                    "desc": "🐕 [CERBERUS SUBJUGATION] Heracles subdues Cerberus, the three-headed hound of Hades. This ultimate labor allows him to tap into the beast's power, fusing with the hound. [TRANSFORMATION: This ultimate labor allows him to tap into the beast's power]"},
             '13': {"name": "🐾 Claw of Heracles", "cost": 60, "dmg": (320, 410), "type": "damage", "cerberus_only": True,
                    "desc": "🐾 [CLAW OF HERACLES] Only available in Cerberus form. Heracles slashes with claws that rend souls. Cerberus' power manifests as invisible claws - each attack creates giant cuts in synchrony with Heracles' movements. The air itself is torn by demonic energy. [TRANSFORMATION: Cerberus' power manifests as invisible claws - each attack creates giant cuts in synchrony with Heracles' movements. The air itself is torn by demonic energy]"},
@@ -3227,7 +3227,7 @@ class Odin(Character):
                     "before this sacred, inviolable form. "
                     "[TRANSFORMATION: The Supreme God sheds his mortal guise]"
                 )
-            },
+            , "uses_left": 1, "max_uses": 1},
             # ── Ultimate Gungnir ─────────────────────────────────────────
             '29': {
                 "name": "🔱 Gungnir: Absolute Certainty", "cost": 150, "dmg": (550, 700),
@@ -3595,7 +3595,7 @@ class LuBu(Character):
                   "blockable": False,
                   "desc": "🏹 [SKY EATER] The technique that defines Lü Bu. The Fang Tian Ji breaks any defense — even Járngreipr cannot withstand it. The sky itself trembles before this strike. [TRANSFORMATION: The sky itself trembles before this strike — Fang Tian Ji shatters all defenses]"},
             '6': {"name": "🦯 Broken Legs Fighting", "cost": 40, "dmg": (220, 290), "type": "damage",
-                  "effect": "break_legs",
+                  "effect": "break_legs", "uses_left": 1, "max_uses": 1,
                   "desc": "🦯 [BROKEN LEGS FIGHTING] Even with broken legs, Lü Bu continues to fight. Pain becomes power - even crippled, he stands. [TRANSFORMATION: Pain becomes power - even crippled, he stands]"},
             '7': {"name": "🏹 The Strongest Warrior from China", "cost": 50, "dmg": (280, 350), "type": "damage",
                   "effect": "shatter",
@@ -3913,7 +3913,7 @@ class JackTheRipper(Character):
                    "weapon": "Guidance of the Nocturne", "max_uses": float('inf'),
                    "desc": "🗡️ [GUIDANCE OF THE NOCTURNE] Jack uses the arm extension technique learned fighting Alfred — elongating his arms to increase reach and momentum, he throws a cannonball with enough rotational force to drill through a torso, leaving a clean hole. [MAGIC GLOVES: Turns CANNONBALL into a DIVINE DRILLING PROJECTILE through arm-extension centrifugal force]"},
             '16': {"name": "🫀 Internal Organ Shift", "cost": 40, "dmg": (0, 0), "type": "buff",
-                   "weapon": "Internal Organ Shift", "max_uses": float('inf'),
+                   "weapon": "Internal Organ Shift", "max_uses": 1, "uses_left": 1,
                    "effect": "organ_shift_manual",
                    "desc": "🫀 [INTERNAL ORGAN SHIFT] Jack manually shifts his internal organs to reduce damage for 3 turns. [MAGIC GLOVES: Enhances his own BODY, allowing organs to shift position]"},
             '17': {"name": "🩸 Dear God", "cost": 120, "dmg": (500, 680), "type": "damage",
@@ -6197,7 +6197,7 @@ class GauntletMode:
         print("=" * 110)
 
         print("\nSelect your champion for the gauntlet:")
-        print("Note: Gauntlet is 1v1 - choose ONE fighter to face all 26!")
+        print("Note: Gauntlet is 1v1 - choose ONE fighter to face all 25!")
 
         party = self.game.select_party(1)
         if not party:
@@ -6479,7 +6479,8 @@ class ChaosMode:
              lambda: [setattr(e, 'max_hp', int(e.max_hp * 1.5)) or setattr(e, 'hp', e.max_hp) for e in enemies]),
 
             ("⚡ TIME DISTORTION! Everyone gets an extra turn!",
-             None),
+             lambda: [p.add_status_effect(StatusEffect.HASTE, 2) for p in party] +
+                     [p.__setattr__('energy', min(p.max_energy, p.energy + 30)) for p in party]),
 
             ("🛡️ VALKYRIE'S PROTECTION! Party gains defense!",
              lambda: [p.add_status_effect(StatusEffect.DEFEND, 1) for p in party]),
@@ -6513,7 +6514,7 @@ class ChaosMode:
             ("✨ DIVINE AWAKENING",
              lambda p: setattr(p, 'divine_mode', True) or setattr(p, 'divine_timer', 3) or p.add_status_effect(
                  StatusEffect.DIVINE, 3)),
-            ("🛡️ VALKYRIE'S FAVOR", lambda p: setattr(p, 'volund_active', True) if not p.volund_active else None)
+            ("🛡️ VALKYRIE'S FAVOR", lambda p: activate_volund_for_character(p, self.game) if not p.volund_active else p.heal(100))
         ]
 
         reward = random.choice(rewards)
@@ -7279,6 +7280,28 @@ class RagnarokGame:
                 if t.defending:
                     dmg = int(dmg * 0.5)
                     t.defending = False
+
+                # Counter checks (same as ai_pattern branch)
+                if t.name == "Qin Shi Huang" and hasattr(t, 'counter_ready') and t.counter_ready:
+                    counter_result = t.counter_attack(dmg, enemy)
+                    if counter_result:
+                        print(f"  {counter_result}")
+                        dmg = 0
+                elif hasattr(t, 'shinra_active') and t.shinra_active:
+                    parry_dmg = int(dmg * 0.5)
+                    enemy.take_damage(parry_dmg, ignore_defense=True)
+                    t.shinra_active = False
+                    t.remove_status_effect(StatusEffect.COUNTER_READY)
+                    print(f"  👁️ [SHINRA YAOYOROZU] Eight million gods intercept! {enemy.name} takes {parry_dmg} reflected damage!")
+                    dmg = int(dmg * 0.3)
+                elif t.name == "Apollo" and hasattr(t, 'counter_ready') and t.counter_ready and t.has_status_effect(StatusEffect.COUNTER_READY):
+                    counter_dmg = int(dmg * 0.6)
+                    enemy.take_damage(counter_dmg, ignore_defense=True)
+                    t.counter_ready = False
+                    t.remove_status_effect(StatusEffect.COUNTER_READY)
+                    print(f"  🎯 [ENLIGHTENED COUNTER] Apollo counters! {enemy.name} takes {counter_dmg} damage!")
+                    dmg = int(dmg * 0.4)
+
                 t.take_damage(dmg)
                 print(f"{enemy.name} uses {first_abil['name']} for {dmg} damage!")
 
@@ -7377,7 +7400,16 @@ class RagnarokGame:
                             continue
                     if abil.get("ichor_only") and hasattr(character, 'ichor_active') and not character.ichor_active:
                         continue
+                    # Kintoki rune cooldown — hide rune while cooling down
+                    if abil.get("effect") == "rune" and hasattr(character, 'rune_cooldown') and character.rune_cooldown > 0:
+                        continue
                     if abil.get("cerberus_only") and hasattr(character, 'cerberus_active') and not character.cerberus_active:
+                        continue
+                    if abil.get("demon_required") and hasattr(character, 'demon_child_active') and not character.demon_child_active:
+                        continue
+                    if abil.get("saw_only") and hasattr(character, 'shield_form') and character.shield_form != "saw":
+                        continue
+                    if abil.get("hammer_only") and hasattr(character, 'shield_form') and character.shield_form != "hammer":
                         continue
                     available[key] = abil
 
@@ -7595,6 +7627,10 @@ class RagnarokGame:
                         return True
 
                 character.energy = max(0, character.energy - ability["cost"])
+
+                # Decrement uses_left for limited-use abilities
+                if "uses_left" in ability:
+                    ability["uses_left"] -= 1
 
                 if ability.get("type") == "damage":
                     target = self.select_target()
@@ -8521,4 +8557,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
