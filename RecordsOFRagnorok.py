@@ -466,6 +466,53 @@ class VisualIndicator:
         icon_str = " ".join(icons) if icons else ""
 
         return f"{bar} {character.hp:3}/{character.max_hp:3} {icon_str}"
+def print_attack_result(attacker, ability, dmg, target, buffs=None, ignore_defense=False):
+    """Rich narrative damage output matching the game's cinematic tone."""
+    SEP = "─" * 80
+
+    # ── Ability name header ────────────────────────────────────────────
+    ability_name = ability.get("name", "Attack")
+    print(f"\n  ⚔️  {attacker.name} → {ability_name}")
+
+    # ── Damage line with target HP bar ────────────────────────────────
+    hp_pct   = max(0, target.hp / target.max_hp) if target.max_hp else 0
+    bar_len  = 10
+    filled   = int(bar_len * hp_pct)
+    bar      = "█" * filled + "░" * (bar_len - filled)
+    hp_icon  = "❤️" if hp_pct > 0.5 else ("🟡" if hp_pct > 0.25 else "🔴")
+    defeated = not target.is_alive()
+
+    print(f"   ⚔️  {dmg:>4} damage dealt  |  {target.name}: {target.hp}/{target.max_hp} HP [{bar}]")
+
+    # ── Multipliers active ─────────────────────────────────────────────
+    if buffs:
+        mult_str = "  |  ".join(buffs)
+        print(f"   Multipliers active: {mult_str}")
+
+    # ── Ability desc snippet (first sentence, max 80 chars) ───────────
+    desc = ability.get("desc", "")
+    if desc:
+        # Strip emoji/bracket prefix, grab first meaningful sentence
+        clean = desc
+        # Remove leading emoji tag like "⚔️ [NAME] "
+        clean = re.sub(r'^[𐀀-􏿿☀-⛿✀-➿]+ \[[^\]]+\] ', '', clean)
+        clean = re.sub(r'^\[[^\]]+\] ', '', clean)
+        # First sentence only
+        first_sent = clean.split('.')[0].split('[TRANSFORMATION')[0].strip()
+        if len(first_sent) > 3:
+            if len(first_sent) > 78:
+                first_sent = first_sent[:75] + "..."
+            print(f"   📖 {first_sent}.")
+
+    # ── Kill message ───────────────────────────────────────────────────
+    if defeated:
+        print(f"   💀 {target.name} has been defeated!")
+
+    import re as _re
+
+import re
+
+
 
 
 # ============================================================================
@@ -1080,7 +1127,7 @@ class Adam(Character):
             '1': {"name": "👁️ Divine Replication", "cost": 0, "dmg": (0, 0), "type": "passive",
                   "desc": "👁️ [EYES OF THE LORD] Adam's eyes can copy any divine technique AND biology he witnesses. When copying the Serpent, his hands grew three times in size with black-green scales and sharp bone claws. Success chance increases with each viewing. [TRANSFORMATION: Divine energy flows through Adam's body, allowing him to perfectly replicate any technique AND biological transformation he sees]"},
             '2': {"name": "👊 Basic Strike", "cost": 15, "dmg": (120, 170), "type": "damage",
-                  "desc": "👊 [BASIC PUNCH] A basic attack from the Father of Humanity. Even this simple strike carries the weight of paternal love. [TRANSFORMATION: Pure paternal love manifests as raw physical force]"},
+                  "desc": "👊 [BASIC STRIKE] A basic attack from the Father of Humanity. Even this simple strike carries the weight of paternal love. [TRANSFORMATION: Pure paternal love manifests as raw physical force]"},
             '3': {"name": "👁️ Father's Love", "cost": 0, "dmg": (0, 0), "type": "passive",
                   "effect": "fight_on_death",
                   "desc": "👁️ [FATHER'S SACRIFICE] Even after death, Adam fights on for his children. His will is so strong that his body continues to fight even after being killed. [TRANSFORMATION: Love transcends mortality itself - Adam's spirit refuses to fade]"},
@@ -1523,7 +1570,7 @@ class Poseidon(Character):
         elif effect == "petrify":
             tgt = target if target else self
             tgt.add_status_effect(StatusEffect.SLOW, 2, 0.5)
-            return "🗿 [PETRIFY] Medusa's power turns the target's movements to stone! The opponent's limbs grow heavy — each step feels like wading through solid earth. SLOWED for 2 turns. [TRANSFORMATION: Medusa's divine gaze crystallises into the trident's tip, momentarily petrifying the target's muscles]"
+            return "🗿 [PETRIFY] Poseidon drives his trident into the ground — the divine vibration crystallizes the earth beneath his opponent's feet, locking their movements in stone. SLOWED for 2 turns. [TRANSFORMATION: The divine trident's vibration spreads through the arena floor, crystallizing everything it touches]"
         return ""
 
     def use_ability(self, ability_key):
@@ -3848,6 +3895,9 @@ class JackTheRipper(Character):
         self.has_environment_weapon = False
         self.organ_shift_used = False
         self.soul_eye_used = False  # Soul Eye first-attack bonus
+        self.piano_wire_active = False
+        self.piano_wire_uses = 10  # Wire trap is set on the battlefield
+        self.piano_wire_uses = 10      # How many wire segments left
 
         self.magic_pouches = {
             "knives": 50,
@@ -3862,17 +3912,21 @@ class JackTheRipper(Character):
 
         self.abilities = {
             '1': {"name": "🗡️ Knife Strike", "cost": 15, "dmg": (110, 160), "type": "damage",
-                  "weapon": "Knife Strike", "max_uses": 50, "uses_left": 50,
-                  "desc": "🗡️ [KNIFE STRIKE] A quick knife attack. Jack carries 50 knives in his magic pouches. [MAGIC GLOVES: Turns ordinary knife into DIVINE THROWING BLADE]"},
+                  "weapon": "Knife Strike", "max_uses": 50, "uses_left": 50, "effect": "knife_throw",
+                  "desc": "🗡️ [KNIFE STRIKE] A quick knife attack. Jack carries 50 knives in his magic pouches. While piano wire is active: launches a WIRE-GUIDED BARRAGE from multiple angles simultaneously. [MAGIC GLOVES: Turns ordinary knife into DIVINE THROWING BLADE]"},
             '2': {"name": "👁️ Soul Eye", "cost": 0, "dmg": (0, 0), "type": "passive",
                   "weapon": "Soul Eye", "max_uses": float('inf'),
                   "desc": "👁️ [SOUL EYE] Jack can see the 'color' of people's souls — reading their nature before the first blow lands. Grants +20% damage on his very first attack of the battle. After that, the element of surprise is gone. [PASSIVE: +20% bonus on first attack only, then consumed]"},
             '3': {"name": "🗡️ Throwing Knives", "cost": 25, "dmg": (130, 190), "type": "damage",
-                  "weapon": "Throwing Knives", "max_uses": 50, "uses_left": 50,
-                  "desc": "🗡️ [THROWING KNIVES] Jack's main weaponry — dozens of small throwing knives which, through his divine gloves, pierce through godly flesh. 50 uses. [MAGIC GLOVES: Turns ordinary throwing knives into DIVINE PIERCING WEAPONS]"},
-            '4': {"name": "🎻 Piano Wire", "cost": 30, "dmg": (150, 210), "type": "damage",
-                  "weapon": "Piano Wire", "max_uses": 10, "uses_left": 10,
-                  "desc": "🎻 [PIANO WIRE] Jack uses piano wire to strangle his opponents. 10 uses. [MAGIC GLOVES: Turns ordinary piano wire into INVISIBLE DIVINE GARROTE]"},
+                  "weapon": "Throwing Knives", "max_uses": 50, "uses_left": 50, "effect": "knife_throw",
+                  "desc": "🗡️ [THROWING KNIVES] Jack's main weaponry. While piano wire is active: the wires GUIDE each knife from multiple directions — an unavoidable barrage. 50 uses. [MAGIC GLOVES: Turns ordinary throwing knives into DIVINE PIERCING WEAPONS]"},
+            '4': {"name": "🎻 Piano Wire Strangle", "cost": 30, "dmg": (150, 210), "type": "damage",
+                  "weapon": "Piano Wire", "max_uses": 10, "uses_left": 10, "effect": "piano_wire_strangle",
+                  "bind": True, "wire_only": True,
+                  "desc": "🎻 [PIANO WIRE STRANGLE] Jack pulls the wire tight — the invisible divine garrote constricts around the enemy's neck and limbs. Only usable while wire is set on the battlefield OR enemy is already bound. [MAGIC GLOVES: Invisible wire becomes an unbreakable divine constriction]"},
+            '4b': {"name": "🕸️ Set Piano Wire Trap", "cost": 20, "dmg": (0, 0), "type": "utility",
+                   "weapon": "Piano Wire", "max_uses": 10, "uses_left": 10, "effect": "piano_wire_trap",
+                   "desc": "🕸️ [PIANO WIRE TRAP] Jack strings invisible piano wire across the arena. While wire is active: Jack deals +15% damage (wire assists targeting), and 60% chance enemy attack triggers the wire — enemy takes 40-70 slashing damage and is BOUND. While wire is active, unlocks 🎻 Piano Wire Strangle. [MAGIC GLOVES: Wire becomes INVISIBLE DIVINE TRAP]"},
             '5': {"name": "☂️ Umbrella", "cost": 25, "dmg": (0, 0), "type": "defense",
                   "weapon": "Umbrella", "max_uses": 2, "uses_left": 2,
                   "effect": "umbrella_shield",
@@ -3911,7 +3965,7 @@ class JackTheRipper(Character):
                    "desc": "🦾 [ARM EXTENSION] Jack's arms extend unnaturally. [MAGIC GLOVES: Enhances his own BODY, allowing limbs to stretch]"},
             '15': {"name": "🗡️ Guidance of the Nocturne", "cost": 55, "dmg": (260, 330), "type": "damage",
                    "weapon": "Guidance of the Nocturne", "max_uses": float('inf'),
-                   "desc": "🗡️ [GUIDANCE OF THE NOCTURNE] Jack uses the arm extension technique learned fighting Alfred — elongating his arms to increase reach and momentum, he throws a cannonball with enough rotational force to drill through a torso, leaving a clean hole. [MAGIC GLOVES: Turns CANNONBALL into a DIVINE DRILLING PROJECTILE through arm-extension centrifugal force]"},
+                   "desc": "🗡️ [GUIDANCE OF THE NOCTURNE] Jack elongates his arms to inhuman length through the Magic Gloves and organ repositioning — perfected across countless midnight hunts through London's streets. He extends his reach to increase reach and momentum, he throws a cannonball with enough rotational force to drill through a torso, leaving a clean hole. [MAGIC GLOVES: Turns CANNONBALL into a DIVINE DRILLING PROJECTILE through arm-extension centrifugal force]"},
             '16': {"name": "🫀 Internal Organ Shift", "cost": 40, "dmg": (0, 0), "type": "buff",
                    "weapon": "Internal Organ Shift", "max_uses": 1, "uses_left": 1,
                    "effect": "organ_shift_manual",
@@ -3962,11 +4016,23 @@ class JackTheRipper(Character):
                 max_uses = ability["max_uses"]
 
                 if "Knife" in weapon_name and "Dear" not in weapon_name and "Throwing" not in weapon_name:
-                    print(
-                        f"⚡ [MAGIC GLOVES] Jack touches the ordinary knife with his Magic Gloves - it transforms into a DIVINE THROWING BLADE!")
+                    if getattr(self, 'piano_wire_active', False):
+                        print("⚡🕸️ [WIRE-GUIDED BARRAGE] Jack feeds the knife into the piano wire network —")
+                        print("   the Magic Gloves pulse as the wire REDIRECTS the blade from every angle!")
+                        print("   North. South. East. West. Above. ALL AT ONCE.")
+                        ability["hits"] = 4
+                        ability["dmg"] = (ability["dmg"][0] // 2, ability["dmg"][1] // 2)
+                    else:
+                        print("⚡ [MAGIC GLOVES] Jack touches the ordinary knife with his Magic Gloves - it transforms into a DIVINE THROWING BLADE!")
                 elif "Throwing Knives" in weapon_name:
-                    print(
-                        f"⚡ [MAGIC GLOVES] Jack hurls his throwing knives — the Magic Gloves transform each one into a DIVINE PIERCING BLADE!")
+                    if getattr(self, 'piano_wire_active', False):
+                        print("⚡🕸️ [WIRE-GUIDED BARRAGE] Throwing knives travel the invisible wire network —")
+                        print("   divine blades arrive from ALL DIRECTIONS simultaneously!")
+                        print("   Heracles blocked north. He blocked south. Then the blade from ABOVE.")
+                        ability["hits"] = 5
+                        ability["dmg"] = (ability["dmg"][0] // 3, ability["dmg"][1] // 3)
+                    else:
+                        print("⚡ [MAGIC GLOVES] Jack hurls his throwing knives — the Magic Gloves transform each one into a DIVINE PIERCING BLADE!")
                 elif "Piano" in weapon_name:
                     print(
                         f"⚡ [MAGIC GLOVES] Jack's Magic Gloves glow as he touches the piano wire - it becomes an INVISIBLE DIVINE GARROTE!")
@@ -4017,6 +4083,47 @@ class JackTheRipper(Character):
             self.arm_extended = True
             self.add_status_effect(StatusEffect.ARM_EXTENSION, 3)
             return "🦾 [MAGIC GLOVES] Jack's arms extend unnaturally as the Magic Gloves enhance his own body!"
+        elif effect == "knife_throw":
+            if self.piano_wire_active:
+                # Wire-guided barrage — knives redirect off wires from every angle
+                self.piano_wire_active = False
+                self.piano_wire_uses = max(0, self.piano_wire_uses - 1)
+                # Restore base knife dmg/hits (barrage is one-time per wire activation)
+            if ability:
+                ability.pop("hits", None)
+                base_ab = self._base_abilities.get(next((k for k,v in self.abilities.items() if v is ability), None), {})
+                if base_ab:
+                    ability["dmg"] = base_ab.get("dmg", ability["dmg"])
+            return (
+                    "🗡️🕸️ [WIRE-GUIDED BARRAGE] Jack's knives travel the invisible wire network — "
+                    "they ricochet off the taut threads, redirecting from NORTH, SOUTH, EAST, WEST, "
+                    "ABOVE — every angle simultaneously! There is no direction to dodge! "
+                    "The wires are destroyed in the process, their purpose served. "
+                    "[TRANSFORMATION: Piano wire becomes the guidance system for an omnidirectional divine barrage]"
+                )
+            return None  # No special effect without wire — normal knife attack
+        elif effect == "piano_wire_strangle":
+            if self.piano_wire_uses <= 0:
+                return "🎻 [NO WIRE] Jack reaches into his pouch — no piano wire left!"
+            self.piano_wire_uses -= 1
+            self.piano_wire_active = False  # wire consumed on strangle
+            if target:
+                target.bound = True
+                target.add_status_effect(StatusEffect.BIND, 2)
+            return ("🎻 [PIANO WIRE STRANGLE] Jack's invisible wire whips around the target — "
+                    "the Magic Gloves make it impossibly strong, and it CONSTRICTS. "
+                    "The target is BOUND as Jack's divine garrote tightens mercilessly! "
+                    "[TRANSFORMATION: Invisible wire becomes an unbreakable divine constriction]")
+        elif effect == "piano_wire_trap":
+            if self.piano_wire_uses <= 0:
+                return "🎻 [NO WIRE] Jack reaches into his pouch — no piano wire left!"
+            self.piano_wire_active = True
+            self.piano_wire_uses -= 1
+            return ("🕸️ [PIANO WIRE TRAP] Jack moves with practiced Victorian grace — "
+                    "invisible wire threads between the pillars, across the floor, through the air. "
+                    "The arena is now Jack's web. The enemy cannot see a single strand. "
+                    "One wrong step... one wrong swing... and the trap springs. "
+                    "[TRANSFORMATION: The battlefield becomes Jack's invisible hunting ground]")
         elif effect == "umbrella_shield":
             self.defending = True
             self.add_status_effect(StatusEffect.DEFEND, 1)
@@ -4056,6 +4163,10 @@ class JackTheRipper(Character):
             mult *= 1.2
             buffs.append("👁️ SOUL EYE +20%")
             self.soul_eye_used = True  # consumed after first strike
+        # Piano Wire active: +15% to all attacks (wire network assists targeting)
+        if self.piano_wire_active:
+            mult *= 1.15
+            buffs.append("🕸️ WIRE NETWORK +15%")
         return mult, buffs
 
     def get_weapon_status(self):
@@ -4114,6 +4225,7 @@ class JackTheRipper(Character):
         self.arm_extended = False
         self.has_environment_weapon = False
         self.soul_eye_used = False
+        self.piano_wire_active = False
         for ability in self.abilities.values():
             if "uses_left" in ability and "max_uses" in ability:
                 if ability["max_uses"] != float('inf'):
@@ -4169,7 +4281,7 @@ class RaidenTameemon(Character):
             "cost": 200,
             "dmg": (600, 800),
             "type": "damage",
-            "desc": "💪 [YATAGARASU] Raiden's ultimate palm strike that blew away TWO of Shiva's arms despite all four blocking. The shockwave removed all sound from Valhalla Arena. All of Raiden's muscle power concentrates into a single devastating palm strike. [TRANSFORMATION: All of Raiden's muscle power concentrates into a single devastating palm strike]"
+            "desc": "💪 [YATAGARASU] Raiden's ultimate Teppo palm strike — all muscle power concentrated into one devastatingly precise thrust. It burst clean through Shiva's four-armed guard, shockwaving the entire Valhalla Arena. The shockwave removed all sound from Valhalla Arena. All of Raiden's muscle power concentrates into a single devastating palm strike. [TRANSFORMATION: All of Raiden's muscle power concentrates into a single devastating palm strike]"
         }
 
         self.abilities = {
@@ -4194,7 +4306,7 @@ class RaidenTameemon(Character):
                   "effect": "release",
                   "desc": "💪 [100% MUSCLE RELEASE] Raiden releases all 100 seals on his muscles, unleashing his true power! However, the strain deals 50 damage to himself. [TRANSFORMATION: The final seal breaks - Raiden's true power erupts, but his body pays the price]"},
             '9': {"name": "🐦‍⬛ Yatagarasu", "cost": 120, "dmg": (470, 630), "type": "damage",
-                  "desc": "🐦‍⬛ [YATAGARASU] 'Three-Legged Crow' — Teppo's strongest form. Raiden focuses power into his legs and channels it into his hand, delivering a palm strike that blew away TWO of Shiva's arms even while blocking with all four. The shockwave removed all sound from Valhalla Arena. [TRANSFORMATION: The three-legged crow's power — a strike that silences the arena]"}
+                  "desc": "🐦‍⬛ [YATAGARASU] 'Three-Legged Crow' — Teppo's strongest form. Raiden channels all power into one devastating palm strike that burst clean through Shiva's four-armed guard — a strike so heavy the shockwave silenced the entire Valhalla Arena. [TRANSFORMATION: The three-legged crow's power — a strike that silences the world]"}
         }
 
         print(f"\n⚔️ VÖLUNDR: Raiden x Thrud")
@@ -7235,6 +7347,19 @@ class RagnarokGame:
                             print(f"  🎯 [ENLIGHTENED COUNTER] Apollo's divine foresight turns the attack back! {enemy.name} takes {counter_dmg} counter damage!")
                             dmg = int(dmg * 0.4)  # attack greatly reduced
 
+                        # Piano Wire Trap — Jack's invisible wire catches the attacker
+                        jack_in_party = next((c for c in party if c.name == "Jack the Ripper" and c.is_alive() and getattr(c, 'piano_wire_active', False)), None)
+                        if jack_in_party and random.random() < 0.60:  # 60% chance wire catches attacker
+                            wire_dmg = random.randint(40, 70)
+                            enemy.take_damage(wire_dmg, ignore_defense=True)
+                            enemy.bound = True
+                            enemy.add_status_effect(StatusEffect.BIND, 1)
+                            jack_in_party.piano_wire_active = False  # wire destroyed on trigger
+                            jack_in_party.piano_wire_uses = max(0, getattr(jack_in_party, 'piano_wire_uses', 0) - 1)
+                            print(f"  🕸️ [PIANO WIRE TRIGGERED!] {enemy.name} stumbles into Jack's invisible wire!")
+                            print(f"  🎻 The divine garrote CONSTRICTS — {wire_dmg} slicing damage! {enemy.name} is BOUND!")
+                            return  # attack cancelled by wire
+
                         # BLIND: 30% miss chance for blinded attacker
                         if enemy.has_status_effect(StatusEffect.BLIND) and random.random() < 0.30:
                             print(f"  👁️ [BLIND] {enemy.name} swings wildly and misses!")
@@ -7242,8 +7367,9 @@ class RagnarokGame:
                         elif any('Menacing' in ab.get('name','') for ab in getattr(t,'abilities',{}).values()) and random.random() < 0.10:
                             print(f"  ⚡ [MENACING AURA] {enemy.name} flinches before Thor's divine presence! Attack misses!")
                         else:
-                            t.take_damage(dmg, ignore_defense=ignore_defense)
-                            print(f"{enemy.name} uses {abil['name']} for {dmg} damage!")
+                            actual_dmg = t.take_damage(dmg, ignore_defense=ignore_defense)
+                            print_attack_result(enemy, abil, actual_dmg or dmg, t)
+
 
                         if adam:
                             is_divine = abil.get("divine", False) or "divine" in abil.get("name", "").lower()
@@ -7302,8 +7428,8 @@ class RagnarokGame:
                     print(f"  🎯 [ENLIGHTENED COUNTER] Apollo counters! {enemy.name} takes {counter_dmg} damage!")
                     dmg = int(dmg * 0.4)
 
-                t.take_damage(dmg)
-                print(f"{enemy.name} uses {first_abil['name']} for {dmg} damage!")
+                actual = t.take_damage(dmg)
+                print_attack_result(enemy, first_abil, actual or dmg, t)
 
                 if adam:
                     is_divine = first_abil.get("divine", False)
@@ -7407,6 +7533,10 @@ class RagnarokGame:
                         continue
                     if abil.get("demon_required") and hasattr(character, 'demon_child_active') and not character.demon_child_active:
                         continue
+                    # Piano Wire Strangle: only available when wire is set OR Jack has active wire network
+                    if abil.get("wire_only") and hasattr(character, 'piano_wire_active'):
+                        if not character.piano_wire_active:
+                            continue
                     if abil.get("saw_only") and hasattr(character, 'shield_form') and character.shield_form != "saw":
                         continue
                     if abil.get("hammer_only") and hasattr(character, 'shield_form') and character.shield_form != "hammer":
@@ -7586,7 +7716,7 @@ class RagnarokGame:
                     slow_print(f"✨✨✨ {character.divine_technique['name']} ✨✨✨", 0.05)
                     print("✨" * 55)
 
-                    print(f"{character.name} unleashes DIVINE TECHNIQUE for {dmg} damage!")
+                    print_attack_result(character, character.divine_technique, dmg, target, buffs)
 
                     # Apply any special effect the DT has
                     dt_effect = character.divine_technique.get("effect")
@@ -7647,8 +7777,10 @@ class RagnarokGame:
                                 hit_dmg = int(hit_dmg * mult)
                                 target.take_damage(hit_dmg, ignore_defense=ability.get("blockable", True) == False)
                                 total_dmg += hit_dmg
-                            print(
-                                f"{character.name} uses {ability['name']} for {total_dmg} total damage across {hits} hits!")
+                            print(f"\n  ⚔️  {character.name} → {ability['name']} ({hits} hits)")
+                            print(f"   ⚔️  {total_dmg:>4} total damage  |  {target.name}: {target.hp}/{target.max_hp} HP [{'█'*int(10*max(0,target.hp/target.max_hp)) + '░'*(10-int(10*max(0,target.hp/target.max_hp)))}]")
+                            if not target.is_alive():
+                                print(f"   💀 {target.name} has been defeated!")
                             # Call apply_effect after all hits (e.g. Shiva hidden_treasure, Kintoki flash)
                             if "effect" in ability and ability["effect"] not in ["bind","hymn_wolves"]:
                                 if hasattr(character, 'apply_effect'):
@@ -7681,14 +7813,14 @@ class RagnarokGame:
                                 bite2 = dmg - bite1
                                 target.take_damage(bite1)
                                 target.take_damage(bite2)
+                                print_attack_result(character, ability, bite1 + bite2, target)
                                 print(f"  🐺 Geri bites for {bite1}! Freki bites for {bite2}!")
-                                print(f"{character.name} uses {ability['name']} for {bite1 + bite2} total damage!")
                                 if hasattr(character, 'apply_effect'):
                                     r = character.apply_effect("hymn_wolves", target=target, ability=ability)
                                     if r: print_ability_result(r)
                             else:
-                                target.take_damage(dmg, ignore_defense=ignore_defense)
-                                print(f"{character.name} uses {ability['name']} for {dmg} damage!")
+                                actual_dmg = target.take_damage(dmg, ignore_defense=ignore_defense)
+                                print_attack_result(character, ability, actual_dmg or dmg, target, buffs)
 
                             # Post-damage hook (e.g. Odin's Yggdrasil life drain)
                             if hasattr(character, 'post_damage_hook') and "effect" in ability:
@@ -7753,7 +7885,7 @@ class RagnarokGame:
                             mult, buffs = character.get_damage_multiplier()
                             dmg = int(dmg * mult)
                             target.take_damage(dmg)
-                            print(f"  {ability['name']} deals {dmg} damage!")
+                            print_attack_result(character, ability, dmg, target, buffs)
 
                     # Hajun possess: handled via _DEBUFF_EFFECTS routing above (target passed to apply_effect)
 
